@@ -28,7 +28,7 @@ export async function verifyPasswordByEmail(email: string, password: string) {
       return false;
     }
 
-    const isPasswordValid = await verifyPassword(password, user.password);
+    const isPasswordValid = await verifyPassword(password, user.password ?? "");
 
     return isPasswordValid;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

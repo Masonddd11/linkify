@@ -111,28 +111,29 @@ export default function LoginForm() {
               type="button"
               variant="outline"
               className="w-full h-12 text-base font-normal justify-start px-4 space-x-3"
+              onClick={() => (window.location.href = "/login/google")}
             >
               <GoogleOriginal className="h-5 w-5" />
               <span>Continue with Google</span>
             </Button>
 
-            <Button
+            {/* <Button
               type="button"
               variant="outline"
               className="w-full h-12 text-base font-normal justify-start px-4 space-x-3"
             >
               <AppleOriginal className="h-5 w-5" />
               <span>Continue with Apple</span>
-            </Button>
+            </Button> */}
 
-            <Button
+            {/* <Button
               type="button"
               variant="outline"
               className="w-full h-12 text-base font-normal justify-start px-4 space-x-3"
             >
               <MdOutlinePhonelinkRing className="h-5 w-5" />
               <span>Continue with phone number</span>
-            </Button>
+            </Button> */}
           </div>
         </>
       )}

@@ -1,5 +1,4 @@
 // src/app/(auth)/register/_controllers/index.ts
-import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { hashPassword } from "@/lib/auth";
 import {
@@ -8,6 +7,8 @@ import {
   setSessionTokenCookie,
 } from "@/lib/session";
 import { z } from "zod";
+import { createUser, findUserByEmail } from "@/lib/user";
+import { prisma } from "@/lib/db";
 
 export async function register(request: NextRequest): Promise<NextResponse> {
   try {
@@ -39,27 +40,54 @@ export async function register(request: NextRequest): Promise<NextResponse> {
 
     const { email, password, name } = parsedBody.data;
 
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
+    const existingUser = await findUserByEmail(email);
 
     if (existingUser) {
+      // If user exists but only has Google auth (no password), allow setting a password
+      if (existingUser.googleId && !existingUser.password) {
+        const hashedPassword = await hashPassword(password);
+
+        // Update the existing user with a password
+        const updatedUser = await prisma.user.update({
+          where: { id: existingUser.id },
+          data: {
+            password: hashedPassword,
+            // Update name if it was only set from Google
+            name:
+              existingUser.name === existingUser.email
+                ? name
+                : existingUser.name,
+          },
+        });
+
+        // Create session for the user
+        const token = generateSessionToken();
+        const session = await createSession(token, updatedUser.id);
+        await setSessionTokenCookie(token, session.expiresAt);
+
+        // Return success response
+        const { password: _, ...userWithoutPassword } = updatedUser;
+        return NextResponse.json({
+          message: "Password set successfully for Google account",
+          user: userWithoutPassword,
+        });
+      }
+
+      // If user already has a password, return error
       return NextResponse.json(
         { message: "Email already registered" },
         { status: 400 }
       );
     }
 
-    // Hash password
+    // Hash password for new user
     const hashedPassword = await hashPassword(password);
 
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name,
-      },
+    // Create new user
+    const user = await createUser({
+      email,
+      password: hashedPassword,
+      name,
     });
 
     // Generate session token and create session

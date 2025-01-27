@@ -572,7 +572,7 @@
   resolved "https://registry.npmjs.org/@oslojs/binary/-/binary-1.0.0.tgz"
   integrity sha512-9RCU6OwXU6p67H4NODbuxv2S3eenuQ4/WFLrsq+K/k682xrznH5EVWA7N4VFk9VYVcbFtKqur5YQQZc0ySGhsQ==
 
-"@oslojs/crypto@^1.0.1":
+"@oslojs/crypto@1.0.1", "@oslojs/crypto@^1.0.1":
   version "1.0.1"
   resolved "https://registry.npmjs.org/@oslojs/crypto/-/crypto-1.0.1.tgz"
   integrity sha512-7n08G8nWjAr/Yu3vu9zzrd0L9XnrJfpMioQcvCMxBIiF5orECHe5/3J0jmXRVvgfqMm/+4oxlQ+Sq39COYLcNQ==
@@ -580,10 +580,22 @@
     "@oslojs/asn1" "1.0.0"
     "@oslojs/binary" "1.0.0"
 
-"@oslojs/encoding@^1.1.0":
+"@oslojs/encoding@0.4.1":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/@oslojs/encoding/-/encoding-0.4.1.tgz#1489e560041533214511e9e03626962d24e58e9f"
+  integrity sha512-hkjo6MuIK/kQR5CrGNdAPZhS01ZCXuWDRJ187zh6qqF2+yMHZpD9fAYpX8q2bOO6Ryhl3XpCT6kUX76N8hhm4Q==
+
+"@oslojs/encoding@1.1.0", "@oslojs/encoding@^1.1.0":
   version "1.1.0"
   resolved "https://registry.npmjs.org/@oslojs/encoding/-/encoding-1.1.0.tgz"
   integrity sha512-70wQhgYmndg4GCPxPPxPGevRKqTIJ2Nh4OkiMWmDAVYsTQ+Ta7Sq+rPevXyXGdzr30/qZBnyOalCszoMxlyldQ==
+
+"@oslojs/jwt@0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@oslojs/jwt/-/jwt-0.2.0.tgz#cdcd51e562eed2e536d273c840e90648c2d4a54a"
+  integrity sha512-bLE7BtHrURedCn4Mco3ma9L4Y1GR2SMBuIvjWr7rmQ4/W/4Jy70TIAgZ+0nIlk0xHz1vNP8x8DCns45Sb2XRbg==
+  dependencies:
+    "@oslojs/encoding" "0.4.1"
 
 "@pkgjs/parseargs@^0.11.0":
   version "0.11.0"
@@ -880,6 +892,15 @@ anymatch@~3.1.2:
   dependencies:
     normalize-path "^3.0.0"
     picomatch "^2.0.4"
+
+arctic@^3.2.1:
+  version "3.2.1"
+  resolved "https://registry.yarnpkg.com/arctic/-/arctic-3.2.1.tgz#7d83af38cb9dda9d8172d5be543a060ed3e524e0"
+  integrity sha512-lvOfv088aiaNCN4bGpnVd0cJmQKUkB2gGaZeA3lTwbBZVj69+zd/LpBPO6CXNCyX45CKqqcaOV6J7HeJ1k4hEA==
+  dependencies:
+    "@oslojs/crypto" "1.0.1"
+    "@oslojs/encoding" "1.1.0"
+    "@oslojs/jwt" "0.2.0"
 
 arg@^5.0.2:
   version "5.0.2"

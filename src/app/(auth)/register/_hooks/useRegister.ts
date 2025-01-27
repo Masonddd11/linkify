@@ -38,7 +38,7 @@ export function useRegister() {
       return response.json();
     },
     onSuccess: () => {
-      router.replace("/dashboard");
+      router.replace("/introduction");
     },
     onError: (error: Error) => {
       setError(error.message);
