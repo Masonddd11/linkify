@@ -17,7 +17,7 @@ model User {
   id       Int       @id @default(autoincrement())
   email    String    @unique
   password String? // Optional for OAuth users
-  name     String
+  name     String    @unique
   googleId String?   @unique // For Google OAuth
   image    String?
   sessions Session[]
@@ -26,6 +26,6 @@ model User {
 model Session {
   id        String   @id
   userId    Int
+  user      User     @relation(fields: [userId], references: [id])
   expiresAt DateTime
-  user      User     @relation(references: [id], fields: [userId], onDelete: Cascade)
 }

@@ -7,7 +7,7 @@ import {
   setSessionTokenCookie,
 } from "@/lib/session";
 import { z } from "zod";
-import { createUser, findUserByEmail } from "@/lib/user";
+import { createUser, findUserByEmail, findUserByName } from "@/lib/user";
 import { prisma } from "@/lib/db";
 
 export async function register(request: NextRequest): Promise<NextResponse> {
@@ -26,7 +26,11 @@ export async function register(request: NextRequest): Promise<NextResponse> {
       name: z
         .string()
         .min(2, "Name must be at least 2 characters")
-        .nonempty({ message: "Name is required" }),
+        .nonempty({ message: "Name is required" })
+        .regex(
+          /^[a-zA-Z0-9_]+$/,
+          "Username can only contain letters, numbers, and underscores"
+        ),
     });
 
     const parsedBody = registerSchema.safeParse(body);
@@ -39,6 +43,15 @@ export async function register(request: NextRequest): Promise<NextResponse> {
     }
 
     const { email, password, name } = parsedBody.data;
+
+    // Check if username is taken
+    const existingUsername = await findUserByName(name);
+    if (existingUsername) {
+      return NextResponse.json(
+        { message: "Username is already taken" },
+        { status: 400 }
+      );
+    }
 
     const existingUser = await findUserByEmail(email);
 
@@ -53,10 +66,7 @@ export async function register(request: NextRequest): Promise<NextResponse> {
           data: {
             password: hashedPassword,
             // Update name if it was only set from Google
-            name:
-              existingUser.name === existingUser.email
-                ? name
-                : existingUser.name,
+            name: name, // Use the new name provided in registration
           },
         });
 
@@ -66,6 +76,7 @@ export async function register(request: NextRequest): Promise<NextResponse> {
         await setSessionTokenCookie(token, session.expiresAt);
 
         // Return success response
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { password: _, ...userWithoutPassword } = updatedUser;
         return NextResponse.json({
           message: "Password set successfully for Google account",

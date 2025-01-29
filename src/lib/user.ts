@@ -59,3 +59,28 @@ export async function findUserByEmail(email: string): Promise<User | null> {
     where: { email },
   });
 }
+
+export async function findUserByName(name: string): Promise<User | null> {
+  return prisma.user.findUnique({
+    where: { name },
+  });
+}
+
+export async function generateUniqueUsername(baseName: string): Promise<string> {
+  // First try the base name
+  const existingUser = await findUserByName(baseName);
+  if (!existingUser) {
+    return baseName;
+  }
+
+  // If base name is taken, try adding numbers until we find a unique one
+  let counter = 1;
+  while (true) {
+    const newName = `${baseName}${counter}`;
+    const existingUser = await findUserByName(newName);
+    if (!existingUser) {
+      return newName;
+    }
+    counter++;
+  }
+}
