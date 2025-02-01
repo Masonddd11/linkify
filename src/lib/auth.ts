@@ -1,5 +1,12 @@
 import { prisma } from "./db";
 import { compare, hash } from "bcryptjs";
+import {
+  deleteSessionTokenCookie,
+  getCurrentSession,
+  invalidateSession,
+} from "./session";
+import { redirect } from "next/navigation";
+import { createServerActionProcedure } from "zsa";
 
 const SALT_ROUNDS = 10;
 
@@ -36,3 +43,29 @@ export async function verifyPasswordByEmail(email: string, password: string) {
     return false;
   }
 }
+
+export async function signOut() {
+  "use server";
+
+  const { session } = await getCurrentSession();
+  if (session) {
+    await invalidateSession(session.id);
+  }
+  await deleteSessionTokenCookie();
+  redirect("/login");
+}
+
+export const authedProcedure = createServerActionProcedure().handler(
+  async () => {
+    try {
+      const { user, session } = await getCurrentSession();
+
+      return {
+        user,
+        session,
+      };
+    } catch {
+      throw new Error("User not authenticated");
+    }
+  }
+);

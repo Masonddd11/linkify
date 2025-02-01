@@ -1,15 +1,21 @@
 import Image from "next/image";
 import LoginForm from "./_components/LoginForm";
+import LogoComponent from "@/components/LogoComponent";
+import { getCurrentSession } from "@/lib/session";
+import { redirect } from "next/navigation";
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const { session } = await getCurrentSession();
+
+  if (session) {
+    redirect("/dashboard");
+  }
+
   return (
     <div className="min-h-screen w-full flex">
       {/* Left Section */}
       <div className="w-full lg:w-[600px] p-8 flex flex-col">
-        <div className="flex items-center gap-2 h-12 mb-16">
-          <Image src="/logo.png" alt="Logo" width={32} height={32} />
-          <span className="text-2xl font-bold">Linkify</span>
-        </div>
+        <LogoComponent />
 
         <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full">
           <h1 className="text-4xl font-bold mb-2">Welcome back!</h1>

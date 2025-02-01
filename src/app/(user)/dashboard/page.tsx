@@ -1,22 +1,10 @@
+import { signOut } from "@/lib/auth";
 import { getCurrentSession } from "@/lib/session";
 import { redirect } from "next/navigation";
-import { invalidateSession, deleteSessionTokenCookie } from "@/lib/session";
 
 export default async function DashboardPage() {
   const { user } = await getCurrentSession();
-
-  if (user === null) {
-    redirect("/login");
-  }
-
-  async function signOut() {
-    "use server";
-
-    const { session } = await getCurrentSession();
-    if (session) {
-      await invalidateSession(session.id);
-    }
-    await deleteSessionTokenCookie();
+  if (!user) {
     redirect("/login");
   }
 
@@ -27,13 +15,13 @@ export default async function DashboardPage() {
         <form action={signOut}>
           <button
             type="submit"
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition-colors"
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
           >
             Sign Out
           </button>
         </form>
       </div>
-      <p>Welcome, {user.name}!</p>
+      <p>Welcome, {user.username}!</p>
     </div>
   );
 }

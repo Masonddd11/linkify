@@ -6,7 +6,7 @@ import {
 import { google } from "@/lib/oauth";
 import { cookies } from "next/headers";
 import { decodeIdToken } from "arctic";
-import { findOrCreateGoogleUser } from "@/lib/user";
+import { findOrCreateGoogleUser, sanitizeUsername } from "@/lib/user";
 
 import type { OAuth2Tokens } from "arctic";
 
@@ -51,9 +51,11 @@ export async function GET(request: Request): Promise<Response> {
   const claims = decodeIdToken(tokens.idToken()) as GoogleIdTokenClaims;
 
   // Find or create user using the extracted function
+
+  const sanitizedUsername = await sanitizeUsername(claims.name);
   const user = await findOrCreateGoogleUser({
     googleId: claims.sub,
-    name: claims.name,
+    username: sanitizedUsername,
     email: claims.email,
     image: claims.picture,
   });

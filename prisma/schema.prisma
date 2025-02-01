@@ -14,13 +14,17 @@ datasource db {
 }
 
 model User {
-  id       Int       @id @default(autoincrement())
-  email    String    @unique
-  password String? // Optional for OAuth users
-  name     String    @unique
-  googleId String?   @unique // For Google OAuth
-  image    String?
-  sessions Session[]
+  id          Int       @id @default(autoincrement())
+  email       String    @unique
+  password    String? // Optional for OAuth users
+  username    String    @unique
+  googleId    String?   @unique // For Google OAuth
+  image       String?
+  sessions    Session[]
+  isOnboarded Boolean   @default(false)
+
+  /// Relation
+  UserProfile UserProfile? // One user has one user info
 }
 
 model Session {
@@ -28,4 +32,40 @@ model Session {
   userId    Int
   user      User     @relation(fields: [userId], references: [id])
   expiresAt DateTime
+}
+
+model UserProfile {
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id])
+
+  slug        String?      @unique
+  displayName String?
+  bio         String?
+  socialLinks SocialLink[]
+}
+
+model SocialLink {
+  id        String      @id @default(uuid())
+  profile   UserProfile @relation(fields: [profileId], references: [id])
+  profileId Int
+  platform  PLATFORM
+  handle    String
+  url       String
+}
+
+enum PLATFORM {
+  TWITTER
+  GITHUB
+  LINKEDIN
+  INSTAGRAM
+  YOUTUBE
+  TIKTOK
+  FACEBOOK
+  TWITCH
+  REDDIT
+  SOUNDCLOUD
+  SPOTIFY
+  VK
+  DRIBBLE
 }

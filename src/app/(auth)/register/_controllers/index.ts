@@ -7,7 +7,7 @@ import {
   setSessionTokenCookie,
 } from "@/lib/session";
 import { z } from "zod";
-import { createUser, findUserByEmail, findUserByName } from "@/lib/user";
+import { createUser, findUserByEmail, findUserByUsername } from "@/lib/user";
 import { prisma } from "@/lib/db";
 
 export async function register(request: NextRequest): Promise<NextResponse> {
@@ -23,10 +23,10 @@ export async function register(request: NextRequest): Promise<NextResponse> {
         .string()
         .min(8, "Password must be at least 8 characters")
         .nonempty({ message: "Password is required" }),
-      name: z
+      username: z
         .string()
-        .min(2, "Name must be at least 2 characters")
-        .nonempty({ message: "Name is required" })
+        .min(3, "Username must be at least 3 characters")
+        .nonempty({ message: "Username is required" })
         .regex(
           /^[a-zA-Z0-9_]+$/,
           "Username can only contain letters, numbers, and underscores"
@@ -42,10 +42,10 @@ export async function register(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const { email, password, name } = parsedBody.data;
+    const { email, password, username } = parsedBody.data;
 
     // Check if username is taken
-    const existingUsername = await findUserByName(name);
+    const existingUsername = await findUserByUsername(username);
     if (existingUsername) {
       return NextResponse.json(
         { message: "Username is already taken" },
@@ -65,8 +65,8 @@ export async function register(request: NextRequest): Promise<NextResponse> {
           where: { id: existingUser.id },
           data: {
             password: hashedPassword,
-            // Update name if it was only set from Google
-            name: name, // Use the new name provided in registration
+            // Update username if it was only set from Google
+            username: username, // Use the new username provided in registration
           },
         });
 
@@ -98,7 +98,7 @@ export async function register(request: NextRequest): Promise<NextResponse> {
     const user = await createUser({
       email,
       password: hashedPassword,
-      name,
+      username,
     });
 
     // Generate session token and create session

@@ -3,7 +3,7 @@ import type { User } from "@prisma/client";
 
 interface CreateUserInput {
   email: string;
-  name: string;
+  username: string;
   googleId?: string;
   image?: string;
   password?: string;
@@ -12,13 +12,25 @@ interface CreateUserInput {
 interface FindOrCreateGoogleUserInput {
   googleId: string;
   email: string;
-  name: string;
+  username: string;
   image?: string;
 }
 
 export async function createUser(input: CreateUserInput): Promise<User> {
-  return prisma.user.create({
-    data: input,
+  return prisma.$transaction(async (tx) => {
+    // Create the user
+    const user = await tx.user.create({
+      data: input,
+    });
+
+    // Create an empty user profile
+    await tx.userProfile.create({
+      data: {
+        userId: user.id,
+      },
+    });
+
+    return user;
   });
 }
 
@@ -32,11 +44,18 @@ export async function findOrCreateGoogleUser(
     },
   });
 
+  const existingUser = await findUserByUsername(input.username);
+
+  //generate new name
+  if (existingUser) {
+    input.username = await generateUniqueUsername(input.username);
+  }
+
   if (!user) {
     // Create new user
     user = await createUser({
       googleId: input.googleId,
-      name: input.name,
+      username: input.username,
       email: input.email,
       image: input.image,
     });
@@ -60,27 +79,47 @@ export async function findUserByEmail(email: string): Promise<User | null> {
   });
 }
 
-export async function findUserByName(name: string): Promise<User | null> {
+export async function findUserByUsername(
+  username: string
+): Promise<User | null> {
   return prisma.user.findUnique({
-    where: { name },
+    where: { username },
   });
 }
 
-export async function generateUniqueUsername(baseName: string): Promise<string> {
-  // First try the base name
-  const existingUser = await findUserByName(baseName);
+export async function generateUniqueUsername(
+  baseUsername: string
+): Promise<string> {
+  // First try the base username
+  const existingUser = await findUserByUsername(baseUsername);
   if (!existingUser) {
-    return baseName;
+    return baseUsername;
   }
 
-  // If base name is taken, try adding numbers until we find a unique one
+  // If base username is taken, try adding numbers until we find a unique one
   let counter = 1;
   while (true) {
-    const newName = `${baseName}${counter}`;
-    const existingUser = await findUserByName(newName);
+    const newUsername = `${baseUsername}${counter}`;
+    const existingUser = await findUserByUsername(newUsername);
     if (!existingUser) {
-      return newName;
+      return newUsername;
     }
     counter++;
   }
+}
+
+export async function sanitizeUsername(username: string): Promise<string> {
+  // Remove any characters that aren't letters, numbers, or underscores
+  // Also convert spaces to underscores and make lowercase
+  const sanitized = username
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9_]/g, "_")
+    .replace(/_{2,}/g, "_") // Replace multiple underscores with single underscore
+    .replace(/^_+|_+$/g, ""); // Remove leading/trailing underscores
+  return sanitized;
+}
+
+export function isValidUsername(username: string): boolean {
+  return /^[a-z0-9_]+$/.test(username);
 }
