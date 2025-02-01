@@ -6,6 +6,7 @@ import { claimSlug } from "../_actions";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import Spinner from "@/app/(auth)/register/_components/Spinner";
+import { URLInput } from "./URLInput";
 
 export function ClaimYourRouteComponent({
   setOnBoardStep,
@@ -66,74 +67,18 @@ export function ClaimYourRouteComponent({
 
         <div className="space-y-6">
           {/* Input Field */}
-          <div className="space-y-2">
-            <label
-              htmlFor="slug"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Choose your profile URL
-            </label>
-            <div className="mt-1 relative rounded-md shadow-sm">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="text-gray-500 sm:text-sm">linkify.io/</span>
-              </div>
-              <input
-                type="text"
-                id="slug"
-                value={slug}
-                onChange={handleChange}
-                className={`
-                  block w-full pl-16 pr-10 py-3 rounded-lg text-sm text-gray-900 placeholder-gray-400
-                  border ${
-                    !status.isValid
-                      ? "border-gray-300 focus:ring-primary-500"
-                      : status.isAvailable === false
-                      ? "border-red-300 focus:ring-red-500"
-                      : status.isAvailable
-                      ? "border-green-300 focus:ring-green-500"
-                      : "border-gray-300 focus:ring-primary-500"
-                  } 
-                  focus:outline-none focus:ring-2 focus:ring-offset-0 focus:border-transparent
-                  transition-colors
-                `}
-                placeholder="yourname"
-              />
-              {/* Validation Icon */}
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                {isChecking ? (
-                  <Spinner />
-                ) : status.isAvailable && status.isValid ? (
-                  <svg
-                    className="h-5 w-5 text-green-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                ) : null}
-              </div>
-            </div>
-            {/* Validation Message */}
-            {status.message && (
-              <p
-                className={`text-sm ${
-                  status.isAvailable && status.isValid
-                    ? "text-green-600"
-                    : status.isAvailable === false
-                    ? "text-red-600"
-                    : "text-gray-600"
-                }`}
-              >
-                {status.message}
-              </p>
-            )}
-          </div>
+          <URLInput
+            id="slug"
+            value={slug}
+            onChange={handleChange}
+            prefix="linkify.io/"
+            placeholder="yourname"
+            label="Choose your profile URL"
+            isValid={status.isValid}
+            isAvailable={status.isAvailable}
+            isChecking={isChecking}
+            message={status.message}
+          />
 
           {/* Guidelines */}
           <div className="bg-gray-50 rounded-lg p-4 space-y-2">
