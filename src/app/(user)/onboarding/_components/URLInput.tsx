@@ -2,18 +2,24 @@
 
 import Spinner from "@/app/(auth)/register/_components/Spinner";
 
-interface URLInputProps {
-  id: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  prefix?: string;
-  placeholder?: string;
-  label?: string;
+interface ValidationState {
   isValid?: boolean;
   isAvailable: boolean | null;
   isChecking?: boolean;
   message?: string;
+}
+
+interface InputConfig {
+  id: string;
+  prefix?: string;
+  placeholder?: string;
+  label?: string;
   className?: string;
+}
+
+interface URLInputProps extends InputConfig, ValidationState {
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export function URLInput({

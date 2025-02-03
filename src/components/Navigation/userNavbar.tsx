@@ -1,7 +1,6 @@
 import { getCurrentSession } from "@/lib/session";
 import Link from "next/link";
 import { signOut } from "@/lib/auth";
-import Image from "next/image";
 import LogoComponent from "@/components/LogoComponent";
 import { IoMenu } from "react-icons/io5";
 

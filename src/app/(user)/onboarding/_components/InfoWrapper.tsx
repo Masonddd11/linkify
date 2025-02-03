@@ -1,8 +1,8 @@
 "use client";
 
-import Spinner from "@/app/(auth)/register/_components/Spinner";
 import { ClaimYourRouteComponent } from "./ClaimYourRouteComponent";
 import { useState } from "react";
+import { AddSocialLinkComponent } from "./AddSocialLinkComponent";
 
 export default function InfoWrapper({ step }: { step: number }) {
   const [onboardStep, setOnboardStep] = useState(step);
@@ -11,7 +11,9 @@ export default function InfoWrapper({ step }: { step: number }) {
       {onboardStep === 1 && (
         <ClaimYourRouteComponent setOnBoardStep={setOnboardStep} />
       )}
-      {onboardStep === 2 && <Spinner />}
+      {onboardStep === 2 && (
+        <AddSocialLinkComponent setOnBoardStep={setOnboardStep} />
+      )}
     </>
   );
 }

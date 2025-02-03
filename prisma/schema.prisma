@@ -45,6 +45,22 @@ model UserProfile {
   socialLinks SocialLink[]
 }
 
+enum PLATFORM {
+  INSTAGRAM
+  TWITTER
+  TIKTOK
+  YOUTUBE
+  LINKEDIN
+  GITHUB
+  FACEBOOK
+  TWITCH
+  REDDIT
+  SOUNDCLOUD
+  SPOTIFY
+  VK
+  DRIBBBLE
+}
+
 model SocialLink {
   id        String      @id @default(uuid())
   profile   UserProfile @relation(fields: [profileId], references: [id])
@@ -52,20 +68,4 @@ model SocialLink {
   platform  PLATFORM
   handle    String
   url       String
-}
-
-enum PLATFORM {
-  TWITTER
-  GITHUB
-  LINKEDIN
-  INSTAGRAM
-  YOUTUBE
-  TIKTOK
-  FACEBOOK
-  TWITCH
-  REDDIT
-  SOUNDCLOUD
-  SPOTIFY
-  VK
-  DRIBBLE
 }

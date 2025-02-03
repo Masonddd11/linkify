@@ -3,6 +3,7 @@
 import z from "zod";
 import { prisma } from "@/lib/db";
 import { authedProcedure } from "@/lib/auth";
+import { PLATFORM } from "@prisma/client";
 
 export const hasUserClaimedSlug = authedProcedure
   .createServerAction()
@@ -85,4 +86,77 @@ export const claimSlug = authedProcedure
       success: true,
       message: "Slug claimed successfully",
     };
+  });
+
+export const saveSocialLinks = authedProcedure
+  .createServerAction()
+  .input(
+    z.object({
+      links: z.record(z.string()),
+    })
+  )
+  .output(
+    z.object({
+      success: z.boolean(),
+      message: z.string(),
+    })
+  )
+  .handler(async ({ ctx, input }) => {
+    try {
+      const { links } = input;
+
+      await prisma.socialLink.deleteMany({
+        where: {
+          profileId: (
+            await prisma.userProfile.findUnique({
+              where: { userId: ctx?.user?.id },
+              select: { id: true },
+            })
+          )?.id,
+        },
+      });
+
+      // Get user profile
+      const userProfile = await prisma.userProfile.findUnique({
+        where: { userId: ctx?.user?.id },
+      });
+
+      if (!userProfile) {
+        throw new Error("User profile not found");
+      }
+
+      // Create new social links
+      const socialLinksPromises = Object.entries(links).map(
+        ([platform, url]) => {
+          if (!url) return null;
+          return prisma.socialLink.create({
+            data: {
+              platform: platform as PLATFORM,
+              url,
+              profileId: userProfile.id,
+              handle: "",
+            },
+          });
+        }
+      );
+
+      await Promise.all(socialLinksPromises.filter(Boolean));
+
+      return {
+        success: true,
+        message: "Social links saved successfully",
+      };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return {
+          success: false,
+          message: error.message,
+        };
+      } else {
+        return {
+          success: false,
+          message: "An unexpected error occurred",
+        };
+      }
+    }
   });
