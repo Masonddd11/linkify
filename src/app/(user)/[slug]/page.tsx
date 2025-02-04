@@ -1,4 +1,4 @@
-import { getProfileAndSocialsBySlug } from "@/lib/user";
+import { getProfileAndSocialsAndWidgetsBySlug } from "@/lib/user";
 import ProfileNotFoundComponent from "./_components/ProfileNotFoundComponent";
 import { UserProfileComponent } from "./_components/UserProfileComponent";
 
@@ -7,11 +7,13 @@ export default async function UserPage({
 }: {
   params: { slug: string };
 }) {
-  const user = await getProfileAndSocialsBySlug(params.slug);
+  const user = await getProfileAndSocialsAndWidgetsBySlug(params.slug);
 
   if (!user) {
     return <ProfileNotFoundComponent />;
   }
 
-  return <UserProfileComponent user={user} />;
+  const isMyLink = user.UserProfile?.slug === params.slug;
+
+  return <UserProfileComponent user={user} isMyLink={isMyLink} edit={false} />;
 }

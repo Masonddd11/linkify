@@ -4,14 +4,22 @@ import { ClaimYourRouteComponent } from "./ClaimYourRouteComponent";
 import { useState } from "react";
 import { AddSocialLinkComponent } from "./AddSocialLinkComponent";
 import { UserInfoComponent } from "./UserInfoComponent";
-import { User } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 export default function InfoWrapper({
   step,
   user,
 }: {
   step: number;
-  user: User;
+  user: Prisma.UserGetPayload<{
+    include: {
+      UserProfile: {
+        include: {
+          socialLinks: true;
+        };
+      };
+    };
+  }>;
 }) {
   const [onboardStep, setOnboardStep] = useState(step);
   return (
@@ -23,7 +31,7 @@ export default function InfoWrapper({
         <AddSocialLinkComponent setOnBoardStep={setOnboardStep} />
       )}
 
-      {onboardStep === 3 && (
+      {onboardStep === 3 && user.UserProfile && (
         <UserInfoComponent setOnBoardStep={setOnboardStep} user={user} />
       )}
     </>

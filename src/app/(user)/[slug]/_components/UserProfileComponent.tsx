@@ -1,18 +1,46 @@
 "use client";
 
-import { SocialLink, User, UserProfile } from "@prisma/client";
-import { socialPlatformConfigs } from "@/types/social";
+import { SocialLink, User, UserProfile, Widget } from "@prisma/client";
+import { WidgetContent } from "@/components/widgets/WidgetContent";
+import { WIDGET_SIZE } from "@prisma/client";
 import Image from "next/image";
+import { SocialLinkVisualizer } from "@/components/SocialLinkVisualizer";
+import EditTooltip from "./EditToolTip";
 
 interface UserProfileComponentProps {
   user: User & {
-    UserProfile: (UserProfile & { socialLinks: SocialLink[] }) | null;
+    UserProfile:
+      | (UserProfile & { socialLinks: SocialLink[]; widgets: Widget[] })
+      | null;
   };
+  isMyLink: boolean;
+  edit: boolean;
 }
 
-export function UserProfileComponent({ user }: UserProfileComponentProps) {
+const getWidgetSizeClass = (size: WIDGET_SIZE): string => {
+  switch (size) {
+    case WIDGET_SIZE.SMALL:
+      return "col-span-3 row-span-1";
+    case WIDGET_SIZE.MEDIUM:
+      return "col-span-6 row-span-1";
+    case WIDGET_SIZE.LARGE:
+      return "col-span-6 row-span-2";
+    case WIDGET_SIZE.WIDE:
+      return "col-span-9 row-span-1";
+    case WIDGET_SIZE.EXTRA_LARGE:
+      return "col-span-9 row-span-2";
+    default:
+      return "col-span-3 row-span-1";
+  }
+};
+
+export function UserProfileComponent({
+  user,
+  isMyLink,
+  edit,
+}: UserProfileComponentProps) {
   return (
-    <div className="flex gap-8 p-12 w-full mx-auto">
+    <div className="flex gap-8 p-12 w-full mx-auto relative min-h-screen">
       {/* Left Section - Profile */}
       <div className="flex-1 w-full space-y-6">
         <div className="space-y-4 flex flex-col justify-start items-start w-full">
@@ -61,37 +89,37 @@ export function UserProfileComponent({ user }: UserProfileComponentProps) {
           </div>
 
           {/* Social Links */}
-          {user.UserProfile?.socialLinks &&
-            user.UserProfile.socialLinks.length > 0 && (
-              <div className="flex justify-start items-center gap-3">
-                {user.UserProfile.socialLinks.map((link) => {
-                  const platform = socialPlatformConfigs.find(
-                    (p) => p.id === link.platform
-                  );
-                  if (!platform) return null;
-                  const Icon = platform.icon;
-
-                  return (
-                    <a
-                      key={link.id}
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2 rounded-lg hover:bg-gray-100 transition-all duration-200"
-                      style={{ color: platform.color }}
-                    >
-                      <Icon className="w-6 h-6" />
-                    </a>
-                  );
-                })}
-              </div>
-            )}
+          {user.UserProfile?.socialLinks && (
+            <SocialLinkVisualizer socialLinks={user.UserProfile.socialLinks} />
+          )}
         </div>
       </div>
       {/* Right Section - Grid */}
-      <div className="flex-[2] max-h-screen overflow-hidden p-3">
-        
+      <div className="flex-[2] max-h-screen overflow-y-auto p-3">
+        <div className="grid grid-cols-12 auto-rows-[120px] gap-4">
+          {user.UserProfile?.widgets?.map((widget: Widget) => (
+            <div
+              key={widget.id}
+              className={`
+                ${getWidgetSizeClass(widget.size)}
+                bg-white rounded-lg border border-gray-200 
+                shadow-sm hover:border-gray-300 
+                hover:scale-[1.02] transition-all duration-200
+                overflow-hidden
+              `}
+            >
+              <WidgetContent widget={widget} />
+            </div>
+          ))}
+        </div>
       </div>
+
+      {/* Edit Tooltip */}
+      {isMyLink && (
+        <div className="fixed bottom-8 right-1/2 translate-x-1/2 ">
+          <EditTooltip />
+        </div>
+      )}
     </div>
   );
 }

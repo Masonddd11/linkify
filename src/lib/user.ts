@@ -65,7 +65,7 @@ export async function findOrCreateGoogleUser(
       where: { id: user.id },
       data: {
         googleId: input.googleId,
-        image: input.image || user.image,
+        image: user.image ? user.image : input.image,
       },
     });
   }
@@ -135,7 +135,29 @@ export function getUserById(
   });
 }
 
-export function getProfileAndSocialsBySlug(slug: string) {
+export function getProfileById(id: number) {
+  return prisma.user.findUnique({
+    where: { id },
+    include: {
+      UserProfile: true,
+    },
+  });
+}
+
+export function getProfileAndSocialsById(id: number) {
+  return prisma.user.findUnique({
+    where: { id },
+    include: {
+      UserProfile: {
+        include: {
+          socialLinks: true,
+        },
+      },
+    },
+  });
+}
+
+export function getProfileAndSocialsAndWidgetsBySlug(slug: string) {
   return prisma.user.findFirst({
     where: {
       UserProfile: {
@@ -146,6 +168,7 @@ export function getProfileAndSocialsBySlug(slug: string) {
       UserProfile: {
         include: {
           socialLinks: true,
+          widgets: true,
         },
       },
     },

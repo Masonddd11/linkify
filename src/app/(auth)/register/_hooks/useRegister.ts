@@ -49,7 +49,7 @@ export function useRegister() {
       return response.json();
     },
     onSuccess: () => {
-      router.push("/dashboard");
+      router.push("/onboarding");
     },
     onError: (error: Error) => {
       setError(error.message);
@@ -58,7 +58,8 @@ export function useRegister() {
 
   return {
     register,
+    setError,
     error,
-    isLoading: isPending,
+    isPending,
   };
 }

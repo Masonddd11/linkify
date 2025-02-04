@@ -16,11 +16,11 @@ export default function RegisterForm() {
     setError("");
 
     const formData = new FormData(event.currentTarget);
-    const name = formData.get("name") as string;
+    const username = formData.get("name") as string;
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
-    register({ name, email, password });
+    register({ username, email, password });
   }
 
   return (

@@ -43,6 +43,7 @@ model UserProfile {
   displayName String?
   bio         String?
   socialLinks SocialLink[]
+  widgets     Widget[]
 }
 
 enum PLATFORM {
@@ -68,4 +69,40 @@ model SocialLink {
   platform  PLATFORM
   handle    String
   url       String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId])
+}
+
+enum WIDGET_TYPE {
+  TEXT
+  LINK
+  IMAGE
+  EMBED
+  SOCIAL
+}
+
+enum WIDGET_SIZE {
+  SMALL
+  MEDIUM
+  LARGE
+  WIDE
+  EXTRA_LARGE
+}
+
+model Widget {
+  id        String      @id @default(cuid())
+  type      WIDGET_TYPE
+  size      WIDGET_SIZE
+  position  Int
+  content   Json
+  profile   UserProfile @relation(fields: [profileId], references: [id])
+  profileId Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId])
 }

@@ -5,12 +5,21 @@ import toast from "react-hot-toast";
 import { saveUserInfo, updateUserProfilePicture } from "../_actions";
 import { ContinueButton } from "./ContinueButton";
 import Image from "next/image";
-import { User } from "@prisma/client";
 import { useRouter } from "next/navigation";
+import { SocialLinkVisualizer } from "@/components/SocialLinkVisualizer";
+import { Prisma } from "@prisma/client";
 
 interface UserInfoComponentProps {
   setOnBoardStep: (step: number) => void;
-  user: User;
+  user: Prisma.UserGetPayload<{
+    include: {
+      UserProfile: {
+        include: {
+          socialLinks: true;
+        };
+      };
+    };
+  }>;
 }
 
 export function UserInfoComponent({
@@ -146,6 +155,13 @@ export function UserInfoComponent({
               maxLength={160}
             />
           </div>
+        </div>
+
+        {/* Social Links */}
+        <div>
+          <SocialLinkVisualizer
+            socialLinks={user?.UserProfile?.socialLinks ?? []}
+          />
         </div>
 
         {/* Continue Button */}
