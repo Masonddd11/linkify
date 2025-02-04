@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { saveSocialLinks } from "../_actions";
 import { PLATFORM } from "@prisma/client";
 import { socialPlatformConfigs } from "@/types/social";
+import { ContinueButton } from "./ContinueButton";
 
 const socialPlatforms = socialPlatformConfigs.map((config) => ({
   ...config,
@@ -20,6 +21,9 @@ export function AddSocialLinkComponent({
 }: AddSocialLinkComponentProps) {
   const [selectedPlatforms, setSelectedPlatforms] = useState<PLATFORM[]>([]);
   const [links, setLinks] = useState<Partial<Record<PLATFORM, string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<PLATFORM, string>>>({});
+
+  const [isAdding, setIsAdding] = useState(false);
 
   const handlePlatformSelect = (platformId: PLATFORM) => {
     if (!selectedPlatforms.includes(platformId)) {
@@ -28,8 +32,52 @@ export function AddSocialLinkComponent({
     }
   };
 
+  const validateHandle = (
+    platformId: PLATFORM,
+    handle: string
+  ): string | null => {
+    if (!handle) return null; // Empty handle is valid (optional)
+
+    // Basic validation: must have at least 1 character
+    if (handle.length < 1) return "Handle is required";
+
+    // Only allow letters, numbers, underscores, and dots
+    const username = handle; // Use handle directly
+    if (!/^[a-zA-Z0-9._]+$/.test(username)) {
+      return "Handle can only contain letters, numbers, dots, and underscores";
+    }
+
+    // Platform-specific validations
+    switch (platformId) {
+      case PLATFORM.TWITTER:
+        if (username.length > 15)
+          return "Twitter handle must be 15 characters or less";
+        break;
+      case PLATFORM.INSTAGRAM:
+        if (username.length > 30)
+          return "Instagram handle must be 30 characters or less";
+        if (username.startsWith(".") || username.endsWith("."))
+          return "Handle cannot start or end with a dot";
+        if (username.includes(".."))
+          return "Handle cannot contain consecutive dots";
+        break;
+      // Add more platform-specific validations as needed
+    }
+
+    return null;
+  };
+
   const handleLinkChange = (platformId: PLATFORM, value: string) => {
-    setLinks({ ...links, [platformId]: value });
+    // Remove @ if user types it
+    const cleanValue = value.startsWith("@") ? value.slice(1) : value;
+    setLinks({ ...links, [platformId]: cleanValue });
+
+    // Validate the new value
+    const error = validateHandle(platformId, cleanValue);
+    setErrors((prev) => ({
+      ...prev,
+      [platformId]: error || undefined,
+    }));
   };
 
   const handleRemovePlatform = (platformId: PLATFORM) => {
@@ -41,7 +89,8 @@ export function AddSocialLinkComponent({
 
   const handleContinue = async () => {
     try {
-      // Convert links to the format expected by the API
+      setIsAdding(true);
+      // Convert usernames to the format expected by the API
       const socialLinks = Object.entries(links)
         .filter(([, handle]) => handle.trim() !== "")
         .map(([platform, handle]) => {
@@ -50,16 +99,17 @@ export function AddSocialLinkComponent({
             throw new Error(`Platform ${platform} configuration not found`);
           }
 
-          const cleanHandle = handle.replace("@", "").trim();
-          let url = handle;
+          // Clean the handle by removing @ and trimming whitespace
+          // Use handle directly as username
+          const username = handle.trim();
 
-          if (!handle.startsWith("http")) {
-            url = platformConfig.urlPattern.replace("{username}", cleanHandle);
-          }
+          // Generate the URL from the username using the platform's URL pattern
+          const url = platformConfig.urlPattern.replace("{username}", username);
 
           return {
             platform: platform as PLATFORM,
-            url: url.startsWith("https://") ? url : `https://${url}`,
+            url,
+            handle: username,
           };
         });
 
@@ -81,6 +131,8 @@ export function AddSocialLinkComponent({
       if (!response.success) {
         throw new Error(response.message);
       }
+
+      setIsAdding(false);
 
       // Move to next step
       setOnBoardStep(3);
@@ -118,15 +170,29 @@ export function AddSocialLinkComponent({
                   className="relative group flex items-center space-x-3 p-4 bg-white rounded-lg border border-gray-200 shadow-sm hover:border-gray-300 transition-all"
                 >
                   <div style={{ color: platform.color }}>{platform.icon}</div>
-                  <input
-                    type="text"
-                    placeholder={platform.placeholder}
-                    value={links[platformId]}
-                    onChange={(e) =>
-                      handleLinkChange(platformId, e.target.value)
-                    }
-                    className="flex-1 bg-transparent border-none focus:ring-0 text-gray-700 placeholder-gray-400"
-                  />
+                  <div className="flex-1 flex flex-col">
+                    <input
+                      type="text"
+                      placeholder={platform.placeholder}
+                      value={links[platformId]}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                        }
+                      }}
+                      onChange={(e) =>
+                        handleLinkChange(platformId, e.target.value)
+                      }
+                      className={`w-full bg-transparent border-none focus:ring-0 text-gray-700 placeholder-gray-400 ${
+                        errors[platformId] ? "text-red-500" : ""
+                      }`}
+                    />
+                    {errors[platformId] && (
+                      <span className="text-xs text-red-500 mt-1">
+                        {errors[platformId]}
+                      </span>
+                    )}
+                  </div>
                   <button
                     onClick={() => handleRemovePlatform(platformId)}
                     className="opacity-0 group-hover:opacity-100 absolute right-2 p-2 text-gray-400 hover:text-gray-600 transition-opacity"
@@ -139,7 +205,7 @@ export function AddSocialLinkComponent({
           </div>
 
           {/* Add Platform Button */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             {socialPlatforms
               .filter((platform) => !selectedPlatforms.includes(platform.id))
               .map((platform) => (
@@ -155,16 +221,20 @@ export function AddSocialLinkComponent({
           </div>
 
           {/* Continue Button */}
-          <button
+          <ContinueButton
             onClick={handleContinue}
-            className="w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors"
-          >
-            Continue
-          </button>
+            isDisabled={
+              Object.keys(errors).some((k) => errors[k as PLATFORM]) ||
+              (selectedPlatforms.length > 0 &&
+                selectedPlatforms.some((p) => !links[p] || !links[p]?.trim()))
+            }
+            isLoading={isAdding}
+            loadingText="Saving..."
+          />
 
           {/* Skip Link */}
           <button
-            onClick={() => setOnBoardStep(4)}
+            onClick={() => setOnBoardStep(3)}
             className="w-full text-center text-sm text-gray-500 hover:text-gray-700 transition-colors"
           >
             Skip for now
@@ -174,7 +244,7 @@ export function AddSocialLinkComponent({
 
       {/* Right Section - Preview */}
       <div className="flex-1 sticky top-4 hidden lg:block">
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden max-w-sm mx-auto">
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden max-w-lg max-h-screen mx-auto">
           {/* Phone Frame */}
           <div className="relative aspect-[9/19] bg-gray-50 p-4">
             {/* Preview Content */}
@@ -187,23 +257,19 @@ export function AddSocialLinkComponent({
               </div>
 
               {/* Social Links Preview */}
-              <div className="space-y-3">
+              <div className=" flex justify-center items-center gap-3">
                 {selectedPlatforms.map((platformId) => {
                   const platform = socialPlatforms.find(
                     (p) => p.id === platformId
                   )!;
-                  const link = links[platformId];
                   return (
                     <div
                       key={platformId}
-                      className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-100"
+                      className="flex items-center justify-center"
                     >
                       <div style={{ color: platform.color }}>
                         {platform.icon}
                       </div>
-                      <span className="text-sm text-gray-600">
-                        {link || platform.placeholder}
-                      </span>
                     </div>
                   );
                 })}

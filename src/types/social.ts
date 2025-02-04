@@ -55,7 +55,7 @@ export const socialPlatformConfigs: SocialPlatformConfig[] = [
     name: "YouTube",
     icon: FaYoutube,
     color: "#FF0000",
-    placeholder: "Channel URL",
+    placeholder: "@username",
     urlPattern: "https://youtube.com/@{username}",
   },
   {
@@ -63,7 +63,7 @@ export const socialPlatformConfigs: SocialPlatformConfig[] = [
     name: "LinkedIn",
     icon: FaLinkedin,
     color: "#0077B5",
-    placeholder: "Profile URL",
+    placeholder: "@username",
     urlPattern: "https://linkedin.com/in/{username}",
   },
   {
@@ -79,7 +79,7 @@ export const socialPlatformConfigs: SocialPlatformConfig[] = [
     name: "Facebook",
     icon: FaFacebook,
     color: "#1877F2",
-    placeholder: "Profile URL",
+    placeholder: "@username",
     urlPattern: "https://facebook.com/{username}",
   },
   {
@@ -87,7 +87,7 @@ export const socialPlatformConfigs: SocialPlatformConfig[] = [
     name: "Twitch",
     icon: FaTwitch,
     color: "#9146FF",
-    placeholder: "Channel URL",
+    placeholder: "@username",
     urlPattern: "https://twitch.tv/{username}",
   },
   {
@@ -103,7 +103,7 @@ export const socialPlatformConfigs: SocialPlatformConfig[] = [
     name: "SoundCloud",
     icon: FaSoundcloud,
     color: "#FF3300",
-    placeholder: "Profile URL",
+    placeholder: "@username",
     urlPattern: "https://soundcloud.com/{username}",
   },
   {
@@ -111,7 +111,7 @@ export const socialPlatformConfigs: SocialPlatformConfig[] = [
     name: "Spotify",
     icon: FaSpotify,
     color: "#1DB954",
-    placeholder: "Profile URL",
+    placeholder: "@username",
     urlPattern: "https://open.spotify.com/user/{username}",
   },
   {
@@ -119,7 +119,7 @@ export const socialPlatformConfigs: SocialPlatformConfig[] = [
     name: "VK",
     icon: FaVk,
     color: "#4A76A8",
-    placeholder: "Profile URL",
+    placeholder: "@username",
     urlPattern: "https://vk.com/{username}",
   },
   {
@@ -127,7 +127,7 @@ export const socialPlatformConfigs: SocialPlatformConfig[] = [
     name: "Dribbble",
     icon: FaDribbble,
     color: "#EA4C89",
-    placeholder: "Profile URL",
+    placeholder: "@username",
     urlPattern: "https://dribbble.com/{username}",
   },
 ];

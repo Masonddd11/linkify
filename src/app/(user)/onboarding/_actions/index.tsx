@@ -160,3 +160,50 @@ export const saveSocialLinks = authedProcedure
       }
     }
   });
+
+export const saveUserInfo = authedProcedure
+  .createServerAction()
+  .input(
+    z.object({
+      displayName: z.string(),
+      bio: z.string(),
+    })
+  )
+  .output(
+    z.object({
+      success: z.boolean(),
+      message: z.string(),
+    })
+  )
+  .handler(async ({ ctx, input }) => {
+    try {
+      const { displayName, bio } = input;
+
+      await prisma.userProfile.update({
+        where: {
+          userId: ctx?.user?.id,
+        },
+        data: {
+          displayName,
+          bio,
+        },
+      });
+
+      return {
+        success: true,
+        message: "User profile updated successfully",
+      };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return {
+          success: false,
+          message: error.message,
+        };
+      } else {
+        return {
+          success: false,
+          message: "An unexpected error occurred",
+        };
+      }
+    }
+  });

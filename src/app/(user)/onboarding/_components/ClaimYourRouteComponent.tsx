@@ -5,8 +5,8 @@ import LogoComponent from "@/components/LogoComponent";
 import { claimSlug } from "../_actions";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import Spinner from "@/app/(auth)/register/_components/Spinner";
 import { URLInput } from "./URLInput";
+import { ContinueButton } from "./ContinueButton";
 
 export function ClaimYourRouteComponent({
   setOnBoardStep,
@@ -109,28 +109,12 @@ export function ClaimYourRouteComponent({
           )}
 
           {/* Continue Button */}
-          <button
+          <ContinueButton
             onClick={handleClaimRoute}
-            className={`
-              w-full py-3 px-4 rounded-lg text-white font-medium
-              ${
-                !isClaiming && status.isAvailable && status.isValid
-                  ? "bg-primary-600 hover:bg-primary-700"
-                  : "bg-gray-300 cursor-not-allowed"
-              }
-              transition-all duration-200 flex items-center justify-center gap-2
-            `}
-            disabled={!status.isAvailable || !status.isValid || isClaiming}
-          >
-            {isClaiming ? (
-              <>
-                <Spinner />
-                Claiming...
-              </>
-            ) : (
-              "Continue"
-            )}
-          </button>
+            isDisabled={!status.isAvailable || !status.isValid}
+            isLoading={isClaiming}
+            loadingText="Claiming..."
+          />
         </div>
       </div>
 
