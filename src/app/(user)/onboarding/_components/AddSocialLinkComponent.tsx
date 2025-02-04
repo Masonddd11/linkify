@@ -250,14 +250,14 @@ export function AddSocialLinkComponent({
             {/* Preview Content */}
             <div className="space-y-4">
               {/* Profile Section */}
-              <div className="text-center space-y-2">
-                <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto"></div>
-                <div className="h-4 w-32 bg-gray-200 rounded mx-auto"></div>
-                <div className="h-3 w-48 bg-gray-100 rounded mx-auto"></div>
+              <div className="text-center space-y-2 flex flex-col items-start w-full">
+                <div className="w-52 h-52 bg-gray-200 rounded-full animate-pulse duration-300"></div>
+                <div className="h-8  bg-gray-200 rounded w-2/3 animate-pulse duration-300"></div>
+                <div className="h-12 w-48 bg-gray-100 rounded animate-pulse duration-300"></div>
               </div>
 
               {/* Social Links Preview */}
-              <div className=" flex justify-center items-center gap-3">
+              <div className=" flex justify-start items-center gap-3">
                 {selectedPlatforms.map((platformId) => {
                   const platform = socialPlatforms.find(
                     (p) => p.id === platformId

@@ -1,5 +1,5 @@
 import { prisma } from "./db";
-import type { User } from "@prisma/client";
+import type { User, UserProfile } from "@prisma/client";
 
 interface CreateUserInput {
   email: string;
@@ -122,4 +122,32 @@ export async function sanitizeUsername(username: string): Promise<string> {
 
 export function isValidUsername(username: string): boolean {
   return /^[a-z0-9_]+$/.test(username);
+}
+
+export function getUserById(
+  id: number
+): Promise<(User & { UserProfile: UserProfile | null }) | null> {
+  return prisma.user.findUnique({
+    where: { id },
+    include: {
+      UserProfile: true,
+    },
+  });
+}
+
+export function getProfileAndSocialsBySlug(slug: string) {
+  return prisma.user.findFirst({
+    where: {
+      UserProfile: {
+        slug,
+      },
+    },
+    include: {
+      UserProfile: {
+        include: {
+          socialLinks: true,
+        },
+      },
+    },
+  });
 }

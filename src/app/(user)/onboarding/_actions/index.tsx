@@ -4,6 +4,7 @@ import z from "zod";
 import { prisma } from "@/lib/db";
 import { authedProcedure } from "@/lib/auth";
 import { PLATFORM } from "@prisma/client";
+import { uploadProfileImage } from "@/lib/cloudinary";
 
 export const hasUserClaimedSlug = authedProcedure
   .createServerAction()
@@ -189,9 +190,84 @@ export const saveUserInfo = authedProcedure
         },
       });
 
+      await prisma.user.update({
+        where: {
+          id: ctx?.user?.id,
+        },
+        data: {
+          isOnboarded: true,
+        },
+      });
+
       return {
         success: true,
         message: "User profile updated successfully",
+      };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return {
+          success: false,
+          message: error.message,
+        };
+      } else {
+        return {
+          success: false,
+          message: "An unexpected error occurred",
+        };
+      }
+    }
+  });
+
+export const updateUserProfilePicture = authedProcedure
+  .createServerAction()
+  .input(
+    z.object({
+      image: z.instanceof(File),
+    })
+  )
+  .output(
+    z.object({
+      success: z.boolean(),
+      message: z.string(),
+    })
+  )
+  .handler(async ({ ctx, input }) => {
+    try {
+      const { image } = input;
+
+      // Validate file type
+      if (!image.type.startsWith("image/")) {
+        throw new Error("File must be an image");
+      }
+
+      // Validate file size (max 10MB)
+      if (image.size > 10 * 1024 * 1024) {
+        throw new Error("File size must be less than 10MB");
+      }
+
+      const bytes = await image.arrayBuffer();
+      const buffer = new Uint8Array(bytes);
+      const userId = ctx?.user?.id;
+
+      if (!userId) throw new Error("User not found");
+
+      const result = await uploadProfileImage({
+        buffer,
+        userId,
+        tags: ["profile_picture", `user_${userId}`],
+        transformation: [
+          { width: 400, height: 400, crop: "fill", gravity: "face" },
+        ],
+      });
+
+      await prisma.user.update({
+        where: { id: userId },
+        data: { image: result.secure_url },
+      });
+
+      return {
+        success: true,
+        message: "User profile picture updated successfully",
       };
     } catch (error: unknown) {
       if (error instanceof Error) {

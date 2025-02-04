@@ -2,10 +2,11 @@
 
 import { useState, useRef } from "react";
 import toast from "react-hot-toast";
-import { saveUserInfo } from "../_actions";
+import { saveUserInfo, updateUserProfilePicture } from "../_actions";
 import { ContinueButton } from "./ContinueButton";
 import Image from "next/image";
 import { User } from "@prisma/client";
+import { useRouter } from "next/navigation";
 
 interface UserInfoComponentProps {
   setOnBoardStep: (step: number) => void;
@@ -24,10 +25,17 @@ export function UserInfoComponent({
   const [imageUrl, setImageUrl] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const router = useRouter();
+
+  const handleImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (file) {
+      await updateUserProfilePicture({ image: file });
+
       const reader = new FileReader();
+
       reader.onloadend = () => {
         setImageUrl(reader.result as string);
       };
@@ -46,18 +54,19 @@ export function UserInfoComponent({
       const [response, error] = await saveUserInfo({
         displayName: displayName.trim(),
         bio: bio.trim(),
-        imageUrl,
       });
 
       if (error) {
-        throw new Error(error);
+        throw new Error(
+          error.message || "An error occurred while saving user info"
+        );
       }
 
       if (!response.success) {
         throw new Error(response.message);
       }
 
-      setOnBoardStep(4);
+      router.push("/dashboard");
     } catch (error: unknown) {
       if (error instanceof Error) {
         toast.error(error.message);
@@ -77,7 +86,7 @@ export function UserInfoComponent({
           {/* Profile Image Upload */}
           <div className="flex flex-col items-center space-y-4">
             <div
-              className="relative w-32 h-32 rounded-full overflow-hidden bg-gray-100 cursor-pointer"
+              className="relative w-52 h-52 rounded-full overflow-hidden bg-gray-100 cursor-pointer"
               onClick={() => fileInputRef.current?.click()}
             >
               {imageUrl ? (
@@ -121,7 +130,7 @@ export function UserInfoComponent({
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Your name"
-              className="ring-0 text-2xl font-bold bg-gray-50 outline-none focus:border-transparent focus:ring-0"
+              className="ring-0 text-4xl font-bold text-gray-800 bg-gray-50 outline-none focus:border-transparent focus:ring-0"
               maxLength={50}
             />
           </div>
