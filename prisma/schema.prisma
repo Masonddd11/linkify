@@ -92,17 +92,103 @@ enum WIDGET_SIZE {
   EXTRA_LARGE
 }
 
+/// JSON schema for TEXT widget content:
+/// {
+///   text: string
+///   color?: string
+/// }
+///
+/// JSON schema for LINK widget content:
+/// {
+///   url: string
+///   title: string
+///   description?: string
+///   thumbnail?: string
+/// }
+///
+/// JSON schema for IMAGE widget content:
+/// {
+///   url: string
+///   alt?: string
+/// }
+///
+/// JSON schema for EMBED widget content:
+/// {
+///   embedUrl: string
+///   type: "youtube" | "spotify" | "other"
+/// }
+///
+/// JSON schema for SOCIAL widget content:
+/// {
+///   platform: string
+///   username: string
+///   profileUrl: string
+/// }
 model Widget {
   id        String      @id @default(cuid())
   type      WIDGET_TYPE
   size      WIDGET_SIZE
   position  Int
-  content   Json
   profile   UserProfile @relation(fields: [profileId], references: [id])
   profileId Int
 
+  // Content relations (only one will be non-null based on type)
+  textContent    TextContent?
+  linkContent    LinkContent?
+  imageContent   ImageContent?
+  embedContent   EmbedContent?
+  socialContent  SocialContent?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  @@index([profileId])
 }
+
+model TextContent {
+  id      String  @id @default(cuid())
+  text    String
+  color   String?
+  widget  Widget  @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+  widgetId String @unique
+}
+
+model LinkContent {
+  id          String  @id @default(cuid())
+  url         String
+  title       String
+  description String?
+  thumbnail   String?
+  widget      Widget  @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+  widgetId    String @unique
+}
+
+model ImageContent {
+  id       String  @id @default(cuid())
+  url      String
+  alt      String?
+  widget   Widget  @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+  widgetId String @unique
+}
+
+model EmbedContent {
+  id       String  @id @default(cuid())
+  embedUrl String
+  type     EmbedType
+  widget   Widget  @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+  widgetId String @unique
+}
+
+model SocialContent {
+  id         String  @id @default(cuid())
+  platform   String
+  username   String
+  profileUrl String
+  widget     Widget  @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+  widgetId   String @unique
+}
+
+enum EmbedType {
+  YOUTUBE
+  SPOTIFY
+  OTHER
+}
+

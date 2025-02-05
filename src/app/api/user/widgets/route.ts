@@ -2,13 +2,13 @@ import { prisma } from "@/lib/db";
 import { getCurrentSession } from "@/lib/session";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { WIDGET_SIZE, WIDGET_TYPE } from "@prisma/client";
+import { WIDGET_SIZE, WIDGET_TYPE, EmbedType } from "@prisma/client";
 
 const widgetSchema = z.object({
   userId: z.number(),
   type: z.nativeEnum(WIDGET_TYPE),
   size: z.nativeEnum(WIDGET_SIZE),
-  content: z.string().transform((str) => JSON.parse(str)), // Transform string to JSON
+  content: z.record(z.any()),
 });
 
 export async function POST(request: NextRequest) {
@@ -25,6 +25,17 @@ export async function POST(request: NextRequest) {
     // Check if the user exists and has a profile
     const userProfile = await prisma.userProfile.findUnique({
       where: { userId },
+      include: {
+        widgets: {
+          include: {
+            textContent: true,
+            linkContent: true,
+            imageContent: true,
+            embedContent: true,
+            socialContent: true,
+          },
+        },
+      },
     });
 
     if (!userProfile) {
@@ -37,21 +48,64 @@ export async function POST(request: NextRequest) {
     // Get the highest position for the current profile's widgets
     const highestPositionWidget = await prisma.widget.findFirst({
       where: { profileId: userProfile.id },
-      orderBy: { position: 'desc' },
+      orderBy: { position: "desc" },
     });
 
     const nextPosition = (highestPositionWidget?.position ?? -1) + 1;
 
-    // Create the widget
+    // Create the widget with the appropriate content type
     const widget = await prisma.widget.create({
       data: {
         type,
         size,
-        content,
         position: nextPosition,
         profile: {
-          connect: { id: userProfile.id }
-        }
+          connect: { id: userProfile.id },
+        },
+        ...(type === WIDGET_TYPE.TEXT && {
+          textContent: {
+            create: content as { text: string; color?: string },
+          },
+        }),
+        ...(type === WIDGET_TYPE.LINK && {
+          linkContent: {
+            create: content as {
+              url: string;
+              title: string;
+              description?: string;
+              thumbnail?: string;
+            },
+          },
+        }),
+        ...(type === WIDGET_TYPE.IMAGE && {
+          imageContent: {
+            create: content as { url: string; alt?: string },
+          },
+        }),
+        ...(type === WIDGET_TYPE.EMBED && {
+          embedContent: {
+            create: {
+              embedUrl: content.embedUrl,
+              type: content.type.toUpperCase() as EmbedType,
+            },
+          },
+        }),
+        ...(type === WIDGET_TYPE.SOCIAL && {
+          socialContent: {
+            create: content as {
+              platform: string;
+              username: string;
+              profileUrl: string;
+            },
+          },
+        }),
+      },
+      include: {
+        textContent: true,
+        linkContent: true,
+        imageContent: true,
+        embedContent: true,
+        socialContent: true,
       },
     });
 
@@ -81,7 +135,7 @@ export async function DELETE(request: NextRequest) {
   try {
     // Get widget ID from the URL
     const url = new URL(request.url);
-    const pathParts = url.pathname.split('/');
+    const pathParts = url.pathname.split("/");
     const widgetId = pathParts[pathParts.length - 1];
 
     if (!widgetId) {

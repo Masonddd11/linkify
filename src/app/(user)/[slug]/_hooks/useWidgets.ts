@@ -3,19 +3,51 @@
 import { WIDGET_SIZE } from "@prisma/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import { WidgetType, WidgetContent } from "@/types/widget";
 
 interface AddWidgetParams {
   userId: number;
-  type: string;
+  type: WidgetType;
   size: WIDGET_SIZE;
-  content: string;
+  content: WidgetContent;
 }
 
 interface WidgetResponse {
-  id: number;
-  type: string;
+  id: string;
+  type: WidgetType;
   size: WIDGET_SIZE;
-  content: string;
+  textContent: {
+    id: string;
+    text: string;
+    color: string | null;
+    widgetId: string;
+  } | null;
+  linkContent: {
+    id: string;
+    title: string;
+    url: string;
+    widgetId: string;
+    description: string | null;
+    thumbnail: string | null;
+  } | null;
+  imageContent: {
+    id: string;
+    url: string;
+    alt: string | null;
+    widgetId: string;
+  } | null;
+  embedContent: {
+    id: string;
+    embedUrl: string;
+    type: string;
+    widgetId: string;
+  } | null;
+  socialContent: {
+    id: string;
+    platform: string;
+    username: string;
+    widgetId: string;
+  } | null;
 }
 
 export function useWidgets(profileUserId: number) {
@@ -32,7 +64,11 @@ export function useWidgets(profileUserId: number) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ ...params, userId: profileUserId }),
+        body: JSON.stringify({
+          ...params,
+          userId: profileUserId,
+          content: params.content,
+        }),
       });
 
       if (!response.ok) {
@@ -55,9 +91,9 @@ export function useWidgets(profileUserId: number) {
   const { mutate: deleteWidget, isPending: isDeleting } = useMutation<
     void,
     Error,
-    number
+    string
   >({
-    mutationFn: async (widgetId: number) => {
+    mutationFn: async (widgetId: string) => {
       const response = await fetch(`/api/user/widgets/${widgetId}`, {
         method: "DELETE",
       });

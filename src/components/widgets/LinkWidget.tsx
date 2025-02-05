@@ -1,9 +1,9 @@
-import { LinkContent } from "@/types/widget";
+import { LinkContent } from "@prisma/client";
 import Image from "next/image";
 
 export function LinkWidget({ content }: { content: LinkContent }) {
   return (
-    <a 
+    <a
       href={content.url}
       target="_blank"
       rel="noopener noreferrer"

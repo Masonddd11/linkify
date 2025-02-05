@@ -1,4 +1,4 @@
-import { ImageContent } from "@/types/widget";
+import { ImageContent } from "@prisma/client";
 import Image from "next/image";
 
 export function ImageWidget({ content }: { content: ImageContent }) {

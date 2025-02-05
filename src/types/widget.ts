@@ -1,3 +1,4 @@
+import { WIDGET_SIZE } from "@prisma/client";
 import { JsonObject } from "@prisma/client/runtime/library";
 
 export enum WidgetSize {
@@ -9,19 +10,48 @@ export enum WidgetSize {
 }
 
 export enum WidgetType {
-  TEXT = "text",
-  LINK = "link",
-  IMAGE = "image",
-  EMBED = "embed",
-  SOCIAL = "social",
+  TEXT = "TEXT",
+  LINK = "LINK",
+  IMAGE = "IMAGE",
+  EMBED = "EMBED",
+  SOCIAL = "SOCIAL",
 }
 
-export interface Widget {
+export interface TextWidget {
   id: string;
-  type: WidgetType;
-  size: WidgetSize;
-  position: number;
-  content: WidgetContent;
+  text: string;
+  color: string | null;
+  widgetId: string;
+}
+
+export interface LinkWidget {
+  id: string;
+  title: string;
+  url: string;
+  widgetId: string;
+  description: string | null;
+  thumbnail: string | null;
+}
+
+export interface ImageWidget {
+  id: string;
+  url: string;
+  alt: string | null;
+  widgetId: string;
+}
+
+export interface EmbedWidget {
+  id: string;
+  embedUrl: string;
+  type: string;
+  widgetId: string;
+}
+
+export interface SocialWidget {
+  id: string;
+  platform: string;
+  username: string;
+  widgetId: string;
 }
 
 export interface TextContent extends JsonObject {
@@ -38,7 +68,7 @@ export interface LinkContent extends JsonObject {
 
 export interface ImageContent extends JsonObject {
   url: string;
-  alt?: string;
+  alt?: string | null;
 }
 
 export interface EmbedContent extends JsonObject {
@@ -58,3 +88,20 @@ export type WidgetContent =
   | ImageContent
   | EmbedContent
   | SocialContent;
+
+export const getWidgetSizeClass = (size: WIDGET_SIZE): string => {
+  switch (size) {
+    case WIDGET_SIZE.SMALL:
+      return "w-[180px] h-[180px]";
+    case WIDGET_SIZE.MEDIUM:
+      return "w-[360px] h-[360px]";
+    case WIDGET_SIZE.LARGE:
+      return "w-[540px] h-[180px]";
+    case WIDGET_SIZE.WIDE:
+      return "w-[720px] h-[180px]";
+    case WIDGET_SIZE.EXTRA_LARGE:
+      return "w-[720px] h-[360px]";
+    default:
+      return "w-[180px] h-[180px]";
+  }
+};

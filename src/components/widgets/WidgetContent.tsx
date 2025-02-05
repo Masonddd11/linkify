@@ -3,27 +3,37 @@ import { LinkWidget } from "./LinkWidget";
 import { ImageWidget } from "./ImageWidget";
 import { EmbedWidget } from "./EmbedWidget";
 import { SocialWidget } from "./SocialWidget";
-import { Widget, WIDGET_TYPE } from "@prisma/client";
-import {
-  EmbedContent,
-  ImageContent,
-  LinkContent,
-  SocialContent,
-  TextContent,
-} from "@/types/widget";
+import { Prisma, WIDGET_TYPE } from "@prisma/client";
 
-export function WidgetContent({ widget }: { widget: Widget }) {
+export function WidgetContent({
+  widget,
+}: {
+  widget: Prisma.WidgetGetPayload<{
+    include: {
+      textContent: true;
+      linkContent: true;
+      imageContent: true;
+      embedContent: true;
+      socialContent: true;
+    };
+  }>;
+}) {
   switch (widget.type) {
     case WIDGET_TYPE.TEXT:
-      return <TextWidget content={widget.content as TextContent} />;
+      if (!widget.textContent) return null;
+      return <TextWidget content={widget.textContent} />;
     case WIDGET_TYPE.LINK:
-      return <LinkWidget content={widget.content as LinkContent} />;
+      if (!widget.linkContent) return null;
+      return <LinkWidget content={widget.linkContent} />;
     case WIDGET_TYPE.IMAGE:
-      return <ImageWidget content={widget.content as ImageContent} />;
+      if (!widget.imageContent) return null;
+      return <ImageWidget content={widget.imageContent} />;
     case WIDGET_TYPE.EMBED:
-      return <EmbedWidget content={widget.content as EmbedContent} />;
+      if (!widget.embedContent) return null;
+      return <EmbedWidget content={widget.embedContent} />;
     case WIDGET_TYPE.SOCIAL:
-      return <SocialWidget content={widget.content as SocialContent} />;
+      if (!widget.socialContent) return null;
+      return <SocialWidget content={widget.socialContent} />;
     default:
       return null;
   }

@@ -1,4 +1,4 @@
-import { EmbedContent } from "@/types/widget";
+import { EmbedContent } from "@prisma/client";
 
 export function EmbedWidget({ content }: { content: EmbedContent }) {
   return (

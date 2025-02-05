@@ -1,4 +1,4 @@
-import { SocialContent } from "@/types/widget";
+import { SocialContent } from "@prisma/client";
 import { FaGithub, FaInstagram, FaLinkedin, FaTwitter } from "react-icons/fa";
 
 const platformIcons = {
@@ -9,7 +9,8 @@ const platformIcons = {
 };
 
 export function SocialWidget({ content }: { content: SocialContent }) {
-  const Icon = platformIcons[content.platform as keyof typeof platformIcons] || FaGithub;
+  const Icon =
+    platformIcons[content.platform as keyof typeof platformIcons] || FaGithub;
 
   return (
     <a

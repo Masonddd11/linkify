@@ -1,8 +1,7 @@
 "use client";
 
-import { SocialLink, User, UserProfile, Widget } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { WidgetContent } from "@/components/widgets/WidgetContent";
-import { WIDGET_SIZE } from "@prisma/client";
 import { SocialLinkVisualizer } from "@/components/SocialLinkVisualizer";
 import EditTooltip from "./EditToolTip";
 import { ProfileImageUpload } from "./ProfileImageUpload";
@@ -11,33 +10,30 @@ import useUpdateUserInfo from "../_hooks/useUpdateUserInfo";
 import { Loader2 } from "lucide-react";
 import React from "react";
 import { AddWidgetButton } from "./AddWidgetButton";
+import { getWidgetSizeClass } from "@/types/widget";
 
 interface UserProfileComponentProps {
-  user: User & {
-    UserProfile:
-      | (UserProfile & { socialLinks: SocialLink[]; widgets: Widget[] })
-      | null;
-  };
+  user: Prisma.UserGetPayload<{
+    include: {
+      UserProfile: {
+        include: {
+          socialLinks: true;
+          widgets: {
+            include: {
+              textContent: true;
+              linkContent: true;
+              imageContent: true;
+              embedContent: true;
+              socialContent: true;
+            };
+          };
+        };
+      };
+    };
+  }>;
   isMyLink: boolean;
   edit: boolean;
 }
-
-const getWidgetSizeClass = (size: WIDGET_SIZE): string => {
-  switch (size) {
-    case WIDGET_SIZE.SMALL:
-      return "col-span-3 row-span-1";
-    case WIDGET_SIZE.MEDIUM:
-      return "col-span-6 row-span-1";
-    case WIDGET_SIZE.LARGE:
-      return "col-span-6 row-span-2";
-    case WIDGET_SIZE.WIDE:
-      return "col-span-9 row-span-1";
-    case WIDGET_SIZE.EXTRA_LARGE:
-      return "col-span-9 row-span-2";
-    default:
-      return "col-span-3 row-span-1";
-  }
-};
 
 export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
   user,
@@ -135,22 +131,29 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
         </div>
       </div>
       {/* Right Section - Grid */}
-      <div className="flex-[2] min-h-screen overflow-y-auto p-3">
-        <div className="grid grid-cols-12 auto-rows-[1fr] gap-4">
-          {user.UserProfile?.widgets?.map((widget: Widget) => (
-            <div
-              key={widget.id}
-              className={`
-                ${getWidgetSizeClass(widget.size)}
-                bg-white rounded-lg border border-gray-200 
-                shadow-sm hover:border-gray-300 
-                hover:scale-[1.02] transition-all duration-200
+      <div className="flex-[2] min-h-screen overflow-y-auto p-6">
+        <div className="flex flex-wrap gap-6 justify-start items-start w-full max-w-5xl mx-auto">
+          {user.UserProfile?.widgets?.map((widget) => {
+            const sizeClass = getWidgetSizeClass(widget.size);
+
+            return (
+              <div
+                key={widget.id}
+                className={`
+                ${sizeClass}
+                bg-white rounded-2xl
+                border
                 overflow-hidden
+                backdrop-blur-xl backdrop-saturate-200
+             border-gray-200
+                group
+                flex-shrink-0
               `}
-            >
-              <WidgetContent widget={widget} />
-            </div>
-          ))}
+              >
+                <WidgetContent widget={widget} />
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -159,6 +162,7 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
         <>
           <div className="fixed bottom-8 right-1/2 translate-x-1/2">
             <EditTooltip edit={edit} />
+            <AddWidgetButton userId={user.id} />
           </div>
         </>
       )}

@@ -168,7 +168,15 @@ export async function getProfileAndSocialsAndWidgetsBySlug(slug: string) {
       UserProfile: {
         include: {
           socialLinks: true,
-          widgets: true,
+          widgets: {
+            include: {
+              textContent: true,
+              linkContent: true,
+              imageContent: true,
+              embedContent: true,
+              socialContent: true,
+            },
+          },
         },
       },
     },
