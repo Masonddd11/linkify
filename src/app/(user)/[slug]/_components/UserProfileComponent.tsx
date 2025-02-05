@@ -206,10 +206,10 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
                     lg: 1024,
                     md: 768,
                     sm: 480,
-                    xs: 200,
+                    xs: 320,
                   }}
-                  cols={{ xl: 4, lg: 3, md: 3, sm: 2, xs: 1 }}
-                  margin={[16, 16]}
+                  cols={{ xl: 4, lg: 3, md: 2, sm: 2, xs: 1 }}
+                  margin={[12, 12]}
                   rowHeight={rowHeight}
                   containerPadding={[16, 16]}
                   isDraggable={edit}

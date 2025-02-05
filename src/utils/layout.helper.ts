@@ -7,33 +7,52 @@ export const getDefaultLayout = (
   edit: boolean
 ): { [key: string]: Layout[] } => {
   const generateLayout = (columnCount: number): Layout[] => {
-    let currentY = 0;
-    let currentX = 0;
+    // Initialize a grid to track occupied spaces
+    const grid: boolean[][] = [];
+    const layouts: Layout[] = [];
 
-    return widgets.map((widget) => {
-      let w = 1; // default width in column units
-      let h = 1; // default height in row units
+    // Helper function to check if a space is available
+    const isSpaceAvailable = (x: number, y: number, w: number, h: number): boolean => {
+      for (let i = y; i < y + h; i++) {
+        for (let j = x; j < x + w; j++) {
+          if (!grid[i]) grid[i] = [];
+          if (grid[i][j]) return false;
+        }
+      }
+      return true;
+    };
+
+    // Helper function to mark space as occupied
+    const occupySpace = (x: number, y: number, w: number, h: number) => {
+      for (let i = y; i < y + h; i++) {
+        for (let j = x; j < x + w; j++) {
+          if (!grid[i]) grid[i] = [];
+          grid[i][j] = true;
+        }
+      }
+    };
+
+    // Process each widget
+    widgets.forEach((widget) => {
+      let w = 1; // default width
+      let h = 1; // default height
 
       // Set size based on widget type
       switch (widget.size) {
         case WIDGET_SIZE.SMALL_SQUARE:
-          w = 1; // Always 1 unit width for small squares
-          h = 1; // Keep height equal to width for square shape
+          w = 1;
+          h = 1;
           break;
         case WIDGET_SIZE.LARGE_SQUARE:
-          w = 2; // Always 2 units width for large squares
-          h = 2; // Keep height equal to width for square shape
+          w = Math.min(2, columnCount);
+          h = 2;
           break;
         case WIDGET_SIZE.WIDE:
-          w = columnCount; // full width
+          w = Math.min(columnCount, 3);
           h = 1;
           break;
         case WIDGET_SIZE.LONG:
-          if (columnCount === 3) {
-            w = 2; // 2/3 width on large screens
-          } else if (columnCount === 2) {
-            w = 2; // full width on medium/small screens
-          }
+          w = Math.min(2, columnCount);
           h = 2;
           break;
         default:
@@ -41,34 +60,33 @@ export const getDefaultLayout = (
           h = 1;
       }
 
-      // Reset x and increment y when we reach the end of a row
-      if (currentX + w > columnCount) {
-        currentX = 0;
-        currentY += h;
+      // Find the first available space
+      let placed = false;
+      let y = 0;
+
+      while (!placed) {
+        for (let x = 0; x <= columnCount - w; x++) {
+          if (isSpaceAvailable(x, y, w, h)) {
+            occupySpace(x, y, w, h);
+            layouts.push({
+              i: widget.id,
+              x,
+              y,
+              w,
+              h,
+              static: true,
+              isDraggable: edit ? true : false,
+              isResizable: false,
+            });
+            placed = true;
+            break;
+          }
+        }
+        if (!placed) y++;
       }
-
-      const layout = {
-        i: widget.id,
-        x: currentX,
-        y: currentY,
-        w,
-        h,
-
-        static: true,
-        isDraggable: edit ? true : false,
-        isResizable: false,
-      };
-
-      // Update x position for next widget
-      currentX += w;
-
-      // If this widget spans multiple rows, update currentY
-      if (h > 1) {
-        currentY += h - 1;
-      }
-
-      return layout;
     });
+
+    return layouts;
   };
 
   return {
