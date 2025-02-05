@@ -91,15 +91,13 @@ export type WidgetContent =
 
 export const getWidgetSizeClass = (size: WIDGET_SIZE): string => {
   switch (size) {
-    case WIDGET_SIZE.SMALL:
+    case WIDGET_SIZE.SMALL_SQUARE:
       return "w-[180px] h-[180px]";
-    case WIDGET_SIZE.MEDIUM:
+    case WIDGET_SIZE.LARGE_SQUARE:
       return "w-[360px] h-[360px]";
-    case WIDGET_SIZE.LARGE:
-      return "w-[540px] h-[180px]";
     case WIDGET_SIZE.WIDE:
       return "w-[720px] h-[180px]";
-    case WIDGET_SIZE.EXTRA_LARGE:
+    case WIDGET_SIZE.LONG:
       return "w-[720px] h-[360px]";
     default:
       return "w-[180px] h-[180px]";
