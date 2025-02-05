@@ -17,20 +17,12 @@ export const getDefaultLayout = (
       // Set size based on widget type
       switch (widget.size) {
         case WIDGET_SIZE.SMALL_SQUARE:
-          if (columnCount === 3) {
-            w = 1; // 1/3 width on large screens
-          } else if (columnCount === 2) {
-            w = 1; // 1/2 width on medium/small screens
-          }
-          h = 1;
+          w = 1; // Always 1 unit width for small squares
+          h = 1; // Keep height equal to width for square shape
           break;
         case WIDGET_SIZE.LARGE_SQUARE:
-          if (columnCount === 3) {
-            w = 2; // 2/3 width on large screens
-          } else if (columnCount === 2) {
-            w = 2; // full width on medium/small screens
-          }
-          h = 2;
+          w = 2; // Always 2 units width for large squares
+          h = 2; // Keep height equal to width for square shape
           break;
         case WIDGET_SIZE.WIDE:
           w = columnCount; // full width
@@ -61,6 +53,7 @@ export const getDefaultLayout = (
         y: currentY,
         w,
         h,
+
         static: true,
         isDraggable: edit ? true : false,
         isResizable: false,

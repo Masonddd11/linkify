@@ -6,7 +6,7 @@ import { SocialLinkVisualizer } from "@/components/SocialLinkVisualizer";
 import { motion } from "framer-motion";
 import EditTooltip from "./EditToolTip";
 import { ProfileImageUpload } from "./ProfileImageUpload";
-import { useEffect, useRef, useMemo } from "react";
+import { useEffect, useRef, useMemo, useState } from "react";
 import useUpdateUserInfo from "../_hooks/useUpdateUserInfo";
 import React from "react";
 import { Responsive, WidthProvider } from "react-grid-layout";
@@ -43,6 +43,32 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
   isMyLink,
   edit,
 }) => {
+  const [rowHeight, setRowHeight] = useState<number>(150);
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const updateRowHeight = () => {
+      if (gridRef.current) {
+        const containerWidth = gridRef.current.offsetWidth;
+        const columns =
+          window.innerWidth >= 1280
+            ? 4
+            : window.innerWidth >= 1024
+            ? 3
+            : window.innerWidth >= 768
+            ? 3
+            : window.innerWidth >= 480
+            ? 2
+            : 1;
+        setRowHeight(containerWidth / columns);
+      }
+    };
+
+    updateRowHeight();
+    window.addEventListener("resize", updateRowHeight);
+    return () => window.removeEventListener("resize", updateRowHeight);
+  }, []);
+
   const {
     name: displayName,
     bio,
@@ -77,14 +103,14 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
       {/* Left Section - Profile */}
       <div className="flex-1 w-full space-y-6">
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
+          initial={edit ? false : { opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
           className="space-y-4 flex flex-col justify-center items-center lg:justify-start lg:items-start w-full"
         >
           {/* Profile Image Upload */}
           <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
+            initial={edit ? false : { scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.5 }}
             className="flex flex-col items-center space-y-4"
@@ -94,7 +120,7 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
 
           {/* Display Name */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={edit ? false : { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.5 }}
             className="w-full relative"
@@ -117,7 +143,7 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
 
           {/* Bio */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={edit ? false : { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.5 }}
             className="w-full relative"
@@ -144,7 +170,7 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
           {/* Social Links */}
           {user.UserProfile?.socialLinks && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={edit ? false : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8, duration: 0.5 }}
             >
@@ -160,50 +186,59 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 1, duration: 0.5 }}
+          transition={edit ? { delay: 0.5 } : { delay: 1, duration: 0.5 }}
           className="w-full max-w-5xl mx-auto"
         >
-          {edit && <p> editable</p>}
           {/* Loading Skeleton */}
 
           {useMemo(() => {
             const ResponsiveGridLayout = WidthProvider(Responsive);
             return (
-              <ResponsiveGridLayout
-                className="m-auto lg:w-[600px] xl:w-[750px] 2xl:max-w-[1500px]"
-                layouts={getDefaultLayout(
-                  user.UserProfile?.widgets || [],
-                  edit
-                )}
-                breakpoints={{ xl: 1280, lg: 1024, md: 768, sm: 480, xs: 200 }}
-                cols={{ xl: 3, lg: 3, md: 3, sm: 2, xs: 2 }}
-                rowHeight={300}
-                containerPadding={[0, 0]}
-                isDraggable={edit}
-                useCSSTransforms={true}
-                // measureBeforeMount={true}
-                onLayoutChange={(layout) => {
-                  console.log("layout changed:", layout);
-                }}
-              >
-                {user.UserProfile?.widgets?.map((widget) => (
-                  <div
-                    key={widget.id}
-                    className={`
-                  bg-white rounded-2xl
-                  border border-gray-200
-                  overflow-hidden
-                  backdrop-blur-xl backdrop-saturate-200
-                  group
-                  transition-shadow duration-200
-                  hover:shadow-[0_8px_16px_-3px_rgba(0,0,0,0.15)]
-                  ${edit ? "cursor-grab active:cursor-grabbing" : ""}
-                `}
-                  >
-                    <WidgetContent widget={widget} />
-                  </div>
-                ))}
-              </ResponsiveGridLayout>
+              <div ref={gridRef}>
+                <ResponsiveGridLayout
+                  className="m-auto lg:w-[600px] xl:w-[750px] 2xl:max-w-[1500px]"
+                  layouts={getDefaultLayout(
+                    user.UserProfile?.widgets || [],
+                    edit
+                  )}
+                  breakpoints={{
+                    xl: 1280,
+                    lg: 1024,
+                    md: 768,
+                    sm: 480,
+                    xs: 200,
+                  }}
+                  cols={{ xl: 4, lg: 3, md: 3, sm: 2, xs: 1 }}
+                  margin={[16, 16]}
+                  rowHeight={rowHeight}
+                  containerPadding={[16, 16]}
+                  isDraggable={edit}
+                  useCSSTransforms={true}
+                  onLayoutChange={(layout) => {
+                    console.log("layout changed:", layout);
+                  }}
+                >
+                  {user.UserProfile?.widgets?.map((widget) => {
+                    return (
+                      <div
+                        key={widget.id}
+                        className={`
+                      bg-white rounded-2xl
+                      border border-gray-200
+                      overflow-hidden
+                      backdrop-blur-xl backdrop-saturate-200
+                      group
+                      transition-shadow duration-200
+                      hover:shadow-[0_8px_16px_-3px_rgba(0,0,0,0.15)]
+                      ${edit ? "cursor-grab active:cursor-grabbing" : ""}
+                    `}
+                      >
+                        <WidgetContent widget={widget} />
+                      </div>
+                    );
+                  })}
+                </ResponsiveGridLayout>
+              </div>
             );
           }, [user.UserProfile?.widgets, edit])}
         </motion.div>
