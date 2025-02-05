@@ -85,11 +85,10 @@ enum WIDGET_TYPE {
 }
 
 enum WIDGET_SIZE {
-  SMALL
-  MEDIUM
-  LARGE
+  SMALL_SQUARE
+  LARGE_SQUARE
   WIDE
-  EXTRA_LARGE
+  LONG
 }
 
 /// JSON schema for TEXT widget content:
@@ -133,22 +132,22 @@ model Widget {
   profileId Int
 
   // Content relations (only one will be non-null based on type)
-  textContent    TextContent?
-  linkContent    LinkContent?
-  imageContent   ImageContent?
-  embedContent   EmbedContent?
-  socialContent  SocialContent?
+  textContent   TextContent?
+  linkContent   LinkContent?
+  imageContent  ImageContent?
+  embedContent  EmbedContent?
+  socialContent SocialContent?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model TextContent {
-  id      String  @id @default(cuid())
-  text    String
-  color   String?
-  widget  Widget  @relation(fields: [widgetId], references: [id], onDelete: Cascade)
-  widgetId String @unique
+  id       String  @id @default(cuid())
+  text     String
+  color    String?
+  widget   Widget  @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+  widgetId String  @unique
 }
 
 model LinkContent {
@@ -158,7 +157,7 @@ model LinkContent {
   description String?
   thumbnail   String?
   widget      Widget  @relation(fields: [widgetId], references: [id], onDelete: Cascade)
-  widgetId    String @unique
+  widgetId    String  @unique
 }
 
 model ImageContent {
@@ -166,23 +165,23 @@ model ImageContent {
   url      String
   alt      String?
   widget   Widget  @relation(fields: [widgetId], references: [id], onDelete: Cascade)
-  widgetId String @unique
+  widgetId String  @unique
 }
 
 model EmbedContent {
-  id       String  @id @default(cuid())
+  id       String    @id @default(cuid())
   embedUrl String
   type     EmbedType
-  widget   Widget  @relation(fields: [widgetId], references: [id], onDelete: Cascade)
-  widgetId String @unique
+  widget   Widget    @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+  widgetId String    @unique
 }
 
 model SocialContent {
-  id         String  @id @default(cuid())
+  id         String @id @default(cuid())
   platform   String
   username   String
   profileUrl String
-  widget     Widget  @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+  widget     Widget @relation(fields: [widgetId], references: [id], onDelete: Cascade)
   widgetId   String @unique
 }
 
@@ -191,4 +190,3 @@ enum EmbedType {
   SPOTIFY
   OTHER
 }
-

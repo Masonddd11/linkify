@@ -3,14 +3,17 @@
 import { Prisma } from "@prisma/client";
 import { WidgetContent } from "@/components/widgets/WidgetContent";
 import { SocialLinkVisualizer } from "@/components/SocialLinkVisualizer";
+import { motion } from "framer-motion";
 import EditTooltip from "./EditToolTip";
 import { ProfileImageUpload } from "./ProfileImageUpload";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from "react";
 import useUpdateUserInfo from "../_hooks/useUpdateUserInfo";
-import { Loader2 } from "lucide-react";
 import React from "react";
+import { Responsive, WidthProvider } from "react-grid-layout";
+import "react-grid-layout/css/styles.css";
+import "react-resizable/css/styles.css";
 import { AddWidgetButton } from "./AddWidgetButton";
-import { getWidgetSizeClass } from "@/types/widget";
+import { getDefaultLayout } from "@/utils/layout.helper";
 
 interface UserProfileComponentProps {
   user: Prisma.UserGetPayload<{
@@ -70,91 +73,140 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
   }, [displayName, bio, edit, handleSave]);
 
   return (
-    <div className="flex gap-8 p-12 w-full mx-auto relative min-h-screen">
+    <div className="flex-col lg:flex-row flex gap-8 p-12 w-full mx-auto relative min-h-screen">
       {/* Left Section - Profile */}
       <div className="flex-1 w-full space-y-6">
-        <div className="space-y-4 flex flex-col justify-start items-start w-full">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+          className="space-y-4 flex flex-col justify-center items-center lg:justify-start lg:items-start w-full"
+        >
           {/* Profile Image Upload */}
-          <div className="flex flex-col items-center space-y-4">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="flex flex-col items-center space-y-4"
+          >
             <ProfileImageUpload currentImage={user.image} edit={edit} />
-          </div>
+          </motion.div>
 
           {/* Display Name */}
-          <div className="w-full relative">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="w-full relative"
+          >
             {edit ? (
               <>
                 <input
                   value={displayName}
                   onChange={handleNameChange}
-                  className="ring-0 text-4xl font-bold text-gray-800 outline-none focus:border-transparent focus:ring-0 w-full"
+                  className="ring-0 text-4xl font-bold text-center lg:text-left text-gray-800 outline-none focus:border-transparent focus:ring-0 w-full"
                   disabled={isLoading}
                 />
-                {isLoading && (
-                  <Loader2 className="absolute right-0 top-1/2 -translate-y-1/2 animate-spin text-gray-500" />
-                )}
               </>
             ) : (
-              <h1 className="text-4xl font-bold text-gray-800 break-words">
+              <h1 className="text-4xl font-bold text-center lg:text-left text-gray-800 break-words">
                 {user.UserProfile?.displayName}
               </h1>
             )}
-          </div>
+          </motion.div>
 
           {/* Bio */}
-          <div className="w-full relative">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+            className="w-full relative"
+          >
             {edit ? (
               <>
                 <textarea
                   ref={bioTextareaRef}
                   value={bio || ""}
                   onChange={handleBioChange}
-                  className="ring-0 text-gray-600 outline-none focus:border-transparent focus:ring-0 w-full resize-none overflow-hidden min-h-[24px]"
+                  className="ring-0 text-gray-600 outline-none focus:border-transparent focus:ring-0 w-full resize-none overflow-hidden min-h-[24px] text-center lg:text-left"
                   rows={1}
                   disabled={isLoading}
                   placeholder="Tell us about yourself"
                 />
-                {isLoading && (
-                  <Loader2 className="absolute right-0 top-1/2 -translate-y-1/2 animate-spin text-gray-500" />
-                )}
               </>
             ) : (
-              <p className="text-gray-600 whitespace-pre-wrap break-words">
+              <p className="text-gray-600 whitespace-pre-wrap break-words text-center lg:text-left">
                 {user.UserProfile?.bio || "This user has not set a bio yet."}
               </p>
             )}
-          </div>
+          </motion.div>
 
           {/* Social Links */}
           {user.UserProfile?.socialLinks && (
-            <SocialLinkVisualizer socialLinks={user.UserProfile.socialLinks} />
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8, duration: 0.5 }}
+            >
+              <SocialLinkVisualizer
+                socialLinks={user.UserProfile.socialLinks}
+              />
+            </motion.div>
           )}
-        </div>
+        </motion.div>
       </div>
       {/* Right Section - Grid */}
-      <div className="flex-[2] min-h-screen overflow-y-auto p-6">
-        <div className="flex flex-wrap gap-6 justify-start items-start w-full max-w-5xl mx-auto">
-          {user.UserProfile?.widgets?.map((widget) => {
-            const sizeClass = getWidgetSizeClass(widget.size);
+      <div className="flex-[2.5] min-h-screen overflow-y-auto p-6 ">
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 1, duration: 0.5 }}
+          className="w-full max-w-5xl mx-auto"
+        >
+          {edit && <p> editable</p>}
+          {/* Loading Skeleton */}
 
+          {useMemo(() => {
+            const ResponsiveGridLayout = WidthProvider(Responsive);
             return (
-              <div
-                key={widget.id}
-                className={`
-                ${sizeClass}
-                bg-white rounded-2xl
-                border
-                overflow-hidden
-                backdrop-blur-xl backdrop-saturate-200
-             border-gray-200
-                group
-                flex-shrink-0
-              `}
+              <ResponsiveGridLayout
+                className="m-auto lg:w-[600px] xl:w-[750px] 2xl:max-w-[1500px]"
+                layouts={getDefaultLayout(
+                  user.UserProfile?.widgets || [],
+                  edit
+                )}
+                breakpoints={{ xl: 1280, lg: 1024, md: 768, sm: 480, xs: 200 }}
+                cols={{ xl: 3, lg: 3, md: 3, sm: 2, xs: 2 }}
+                rowHeight={300}
+                containerPadding={[0, 0]}
+                isDraggable={edit}
+                useCSSTransforms={true}
+                // measureBeforeMount={true}
+                onLayoutChange={(layout) => {
+                  console.log("layout changed:", layout);
+                }}
               >
-                <WidgetContent widget={widget} />
-              </div>
+                {user.UserProfile?.widgets?.map((widget) => (
+                  <div
+                    key={widget.id}
+                    className={`
+                  bg-white rounded-2xl
+                  border border-gray-200
+                  overflow-hidden
+                  backdrop-blur-xl backdrop-saturate-200
+                  group
+                  transition-shadow duration-200
+                  hover:shadow-[0_8px_16px_-3px_rgba(0,0,0,0.15)]
+                  ${edit ? "cursor-grab active:cursor-grabbing" : ""}
+                `}
+                  >
+                    <WidgetContent widget={widget} />
+                  </div>
+                ))}
+              </ResponsiveGridLayout>
             );
-          })}
-        </div>
+          }, [user.UserProfile?.widgets, edit])}
+        </motion.div>
       </div>
 
       {/* Edit Tooltip and Add Widget Button */}

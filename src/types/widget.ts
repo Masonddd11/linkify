@@ -2,11 +2,10 @@ import { WIDGET_SIZE } from "@prisma/client";
 import { JsonObject } from "@prisma/client/runtime/library";
 
 export enum WidgetSize {
-  SMALL = "SMALL", // 1x1 (3 columns)
-  MEDIUM = "MEDIUM", // 2x1 (6 columns)
-  LARGE = "LARGE", // 2x2 (6 columns, 2 rows)
-  WIDE = "WIDE", // 3x1 (9 columns)
-  EXTRA_LARGE = "EXTRA_LARGE", // 3x2 (9 columns, 2 rows)
+  SMALL_SQUARE = "SMALL_SQUARE", // 2x2 (4 columns)
+  LARGE_SQUARE = "LARGE_SQUARE", // 4x4 (8 columns)
+  WIDE = "WIDE", // 6x2 (12 columns, short)
+  LONG = "LONG", // 4x6 (8 columns, tall)
 }
 
 export enum WidgetType {
@@ -91,17 +90,15 @@ export type WidgetContent =
 
 export const getWidgetSizeClass = (size: WIDGET_SIZE): string => {
   switch (size) {
-    case WIDGET_SIZE.SMALL:
-      return "w-[180px] h-[180px]";
-    case WIDGET_SIZE.MEDIUM:
-      return "w-[360px] h-[360px]";
-    case WIDGET_SIZE.LARGE:
-      return "w-[540px] h-[180px]";
+    case WIDGET_SIZE.SMALL_SQUARE:
+      return "w-[240px] h-[240px]";
+    case WIDGET_SIZE.LARGE_SQUARE:
+      return "w-[480px] h-[480px]";
     case WIDGET_SIZE.WIDE:
-      return "w-[720px] h-[180px]";
-    case WIDGET_SIZE.EXTRA_LARGE:
-      return "w-[720px] h-[360px]";
+      return "w-[720px] h-[240px]";
+    case WIDGET_SIZE.LONG:
+      return "w-[480px] h-[720px]";
     default:
-      return "w-[180px] h-[180px]";
+      return "w-[240px] h-[240px]";
   }
 };

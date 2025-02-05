@@ -32,17 +32,16 @@ interface AddWidgetButtonProps {
 }
 
 const WIDGET_SIZES = [
-  { value: WIDGET_SIZE.SMALL, label: "Small" },
-  { value: WIDGET_SIZE.MEDIUM, label: "Medium" },
-  { value: WIDGET_SIZE.LARGE, label: "Large" },
+  { value: WIDGET_SIZE.SMALL_SQUARE, label: "Small Square" },
+  { value: WIDGET_SIZE.LARGE_SQUARE, label: "Large Square" },
   { value: WIDGET_SIZE.WIDE, label: "Wide" },
-  { value: WIDGET_SIZE.EXTRA_LARGE, label: "Extra Large" },
+  { value: WIDGET_SIZE.LONG, label: "Long" },
 ];
 
 export function AddWidgetButton({ userId }: AddWidgetButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [type, setType] = useState<WidgetType>(WidgetType.TEXT);
-  const [size, setSize] = useState<WIDGET_SIZE>(WIDGET_SIZE.SMALL);
+  const [size, setSize] = useState<WIDGET_SIZE>(WIDGET_SIZE.SMALL_SQUARE);
   const [content, setContent] = useState<WidgetContent>({} as TextContent);
 
   const { addWidget, isAdding } = useWidgets(userId);
@@ -91,7 +90,7 @@ export function AddWidgetButton({ userId }: AddWidgetButtonProps) {
         onSuccess: () => {
           setIsOpen(false);
           setType(WidgetType.TEXT);
-          setSize(WIDGET_SIZE.SMALL);
+          setSize(WIDGET_SIZE.SMALL_SQUARE);
           setContent({} as TextContent);
         },
       }
