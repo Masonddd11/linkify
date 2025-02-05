@@ -1,16 +1,17 @@
+import { redirect } from "next/navigation";
+import { UserProfileComponent } from "../_components/UserProfileComponent";
 import { getProfileAndSocialsAndWidgetsBySlug, getUserById } from "@/lib/user";
-import ProfileNotFoundComponent from "./_components/ProfileNotFoundComponent";
-import { UserProfileComponent } from "./_components/UserProfileComponent";
+import ProfileNotFoundComponent from "../_components/ProfileNotFoundComponent";
 import { getCurrentSession } from "@/lib/session";
 
-export default async function UserPage({
+export default async function EditProfilePage({
   params,
 }: {
   params: { slug: string };
 }) {
   const { slug } = await params;
   if (!slug) {
-    return <ProfileNotFoundComponent />;
+    return redirect("/");
   }
 
   const user = await getProfileAndSocialsAndWidgetsBySlug(slug);
@@ -24,7 +25,7 @@ export default async function UserPage({
   }
 
   const isMyLink =
-    user.UserProfile.slug === currentUserWithProfile?.UserProfile?.slug;
+    user?.UserProfile?.slug === currentUserWithProfile?.UserProfile?.slug;
 
-  return <UserProfileComponent user={user} isMyLink={isMyLink} edit={false} />;
+  return <UserProfileComponent user={user} isMyLink={isMyLink} edit={true} />;
 }

@@ -157,7 +157,7 @@ export function getProfileAndSocialsById(id: number) {
   });
 }
 
-export function getProfileAndSocialsAndWidgetsBySlug(slug: string) {
+export async function getProfileAndSocialsAndWidgetsBySlug(slug: string) {
   return prisma.user.findFirst({
     where: {
       UserProfile: {

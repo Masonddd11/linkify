@@ -3,9 +3,14 @@
 import { SocialLink, User, UserProfile, Widget } from "@prisma/client";
 import { WidgetContent } from "@/components/widgets/WidgetContent";
 import { WIDGET_SIZE } from "@prisma/client";
-import Image from "next/image";
 import { SocialLinkVisualizer } from "@/components/SocialLinkVisualizer";
 import EditTooltip from "./EditToolTip";
+import { ProfileImageUpload } from "./ProfileImageUpload";
+import { useEffect, useRef } from "react";
+import useUpdateUserInfo from "../_hooks/useUpdateUserInfo";
+import { Loader2 } from "lucide-react";
+import React from "react";
+import { AddWidgetButton } from "./AddWidgetButton";
 
 interface UserProfileComponentProps {
   user: User & {
@@ -34,11 +39,40 @@ const getWidgetSizeClass = (size: WIDGET_SIZE): string => {
   }
 };
 
-export function UserProfileComponent({
+export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
   user,
   isMyLink,
   edit,
-}: UserProfileComponentProps) {
+}) => {
+  const {
+    name: displayName,
+    bio,
+    handleNameChange,
+    handleBioChange,
+    handleSave,
+    isLoading,
+  } = useUpdateUserInfo(
+    user.UserProfile?.displayName || "",
+    user.UserProfile?.bio || "",
+    user.id
+  );
+
+  const bioTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const textarea = bioTextareaRef.current;
+    if (textarea && edit) {
+      textarea.style.height = "auto";
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  }, [bio, edit]);
+
+  useEffect(() => {
+    if (edit) {
+      handleSave();
+    }
+  }, [displayName, bio, edit, handleSave]);
+
   return (
     <div className="flex gap-8 p-12 w-full mx-auto relative min-h-screen">
       {/* Left Section - Profile */}
@@ -46,46 +80,52 @@ export function UserProfileComponent({
         <div className="space-y-4 flex flex-col justify-start items-start w-full">
           {/* Profile Image Upload */}
           <div className="flex flex-col items-center space-y-4">
-            <div className="relative w-52 h-52 rounded-full overflow-hidden bg-gray-100">
-              {user.image ? (
-                <Image
-                  src={user.image}
-                  alt="Profile"
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <svg
-                    className="w-12 h-12 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    />
-                  </svg>
-                </div>
-              )}
-            </div>
+            <ProfileImageUpload currentImage={user.image} edit={edit} />
           </div>
 
           {/* Display Name */}
-          <div>
-            <h1 className="text-4xl font-bold text-gray-800">
-              {user.UserProfile?.displayName}
-            </h1>
+          <div className="w-full relative">
+            {edit ? (
+              <>
+                <input
+                  value={displayName}
+                  onChange={handleNameChange}
+                  className="ring-0 text-4xl font-bold text-gray-800 outline-none focus:border-transparent focus:ring-0 w-full"
+                  disabled={isLoading}
+                />
+                {isLoading && (
+                  <Loader2 className="absolute right-0 top-1/2 -translate-y-1/2 animate-spin text-gray-500" />
+                )}
+              </>
+            ) : (
+              <h1 className="text-4xl font-bold text-gray-800 break-words">
+                {user.UserProfile?.displayName}
+              </h1>
+            )}
           </div>
 
           {/* Bio */}
-          <div>
-            <p className="text-gray-600">
-              {user.UserProfile?.bio || "This user has not set a bio yet."}
-            </p>
+          <div className="w-full relative">
+            {edit ? (
+              <>
+                <textarea
+                  ref={bioTextareaRef}
+                  value={bio || ""}
+                  onChange={handleBioChange}
+                  className="ring-0 text-gray-600 outline-none focus:border-transparent focus:ring-0 w-full resize-none overflow-hidden min-h-[24px]"
+                  rows={1}
+                  disabled={isLoading}
+                  placeholder="Tell us about yourself"
+                />
+                {isLoading && (
+                  <Loader2 className="absolute right-0 top-1/2 -translate-y-1/2 animate-spin text-gray-500" />
+                )}
+              </>
+            ) : (
+              <p className="text-gray-600 whitespace-pre-wrap break-words">
+                {user.UserProfile?.bio || "This user has not set a bio yet."}
+              </p>
+            )}
           </div>
 
           {/* Social Links */}
@@ -95,8 +135,8 @@ export function UserProfileComponent({
         </div>
       </div>
       {/* Right Section - Grid */}
-      <div className="flex-[2] max-h-screen overflow-y-auto p-3">
-        <div className="grid grid-cols-12 auto-rows-[120px] gap-4">
+      <div className="flex-[2] min-h-screen overflow-y-auto p-3">
+        <div className="grid grid-cols-12 auto-rows-[1fr] gap-4">
           {user.UserProfile?.widgets?.map((widget: Widget) => (
             <div
               key={widget.id}
@@ -114,12 +154,14 @@ export function UserProfileComponent({
         </div>
       </div>
 
-      {/* Edit Tooltip */}
+      {/* Edit Tooltip and Add Widget Button */}
       {isMyLink && (
-        <div className="fixed bottom-8 right-1/2 translate-x-1/2 ">
-          <EditTooltip />
-        </div>
+        <>
+          <div className="fixed bottom-8 right-1/2 translate-x-1/2">
+            <EditTooltip edit={edit} />
+          </div>
+        </>
       )}
     </div>
   );
-}
+};

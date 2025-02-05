@@ -3,7 +3,7 @@
 import { Share2, Edit3 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-export default function EditTooltip() {
+export default function EditTooltip({ edit }: { edit: boolean }) {
   const router = useRouter();
 
   return (
@@ -15,10 +15,10 @@ export default function EditTooltip() {
           navigator.clipboard.writeText(window.location.href);
           // You could add a toast notification here
         }}
-        className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors duration-200"
+        className="flex items-center gap-2 text-gray-600 hover:text-primary-400 transition-colors duration-200"
       >
         <Share2 className="w-5 h-5" />
-        <span className="text-sm font-medium">Share Profile</span>
+        <span className="text-sm font-bold">Share Profile</span>
       </button>
 
       {/* Divider */}
@@ -28,12 +28,19 @@ export default function EditTooltip() {
       <button
         onClick={() => {
           const url = new URL(window.location.href);
-          router.push(url.pathname + "/edit");
+
+          console.log(url.pathname);
+
+          if (edit) {
+            router.push(url.pathname.replace("/edit", ""));
+          } else {
+            router.push(url.pathname + "/edit");
+          }
         }}
-        className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors duration-200"
+        className="flex items-center gap-2 text-gray-600 hover:text-primary-400 transition-colors duration-200"
       >
         <Edit3 className="w-5 h-5" />
-        <span className="text-sm font-medium">Edit Profile</span>
+        <span className="text-sm font-bold">Edit Profile</span>
       </button>
     </div>
   );
