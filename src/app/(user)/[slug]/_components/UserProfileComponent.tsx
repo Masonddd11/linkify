@@ -15,6 +15,7 @@ import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import { AddWidgetButton } from "./AddWidgetButton";
 import { getLayout } from "@/utils/layout.helper";
+import "./UserProfileComponent.css";
 
 interface UserProfileComponentProps {
   user: Prisma.UserGetPayload<{
@@ -145,7 +146,7 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
         // Calculate total margin space between items
         const marginSpace = (columns - 1) * 16; // 16px margin between items
 
-      // Calculate the width for each item
+        // Calculate the width for each item
         const itemWidth = (availableWidth - marginSpace) / columns;
 
         // Set the row height equal to the item width to make squares
@@ -298,10 +299,14 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
               compactType={null}
               onLayoutChange={handleLayoutChange}
               onDrag={(layout: Layout[]) => {
-                handleDrag(layout);
+                if (edit) {
+                  handleDrag(layout);
+                }
               }}
               onDragStop={(layout) => {
-                handleDragStop(layout);
+                if (edit) {
+                  handleDragStop(layout);
+                }
               }}
             >
               {user.UserProfile?.widgets?.map((widget) => (
