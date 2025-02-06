@@ -136,17 +136,20 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
     const updateRowHeight = () => {
       if (gridRef.current) {
         const containerWidth = gridRef.current.offsetWidth;
-        const columns =
-          window.innerWidth >= 1280
-            ? 4
-            : window.innerWidth >= 1024
-            ? 3
-            : window.innerWidth >= 768
-            ? 3
-            : window.innerWidth >= 480
-            ? 2
-            : 1;
-        setRowHeight(containerWidth / columns);
+        const columns = 3;
+
+        // Calculate available width after subtracting container padding
+        const containerPadding = 16 * 2; // 16px padding on each side
+        const availableWidth = containerWidth - containerPadding;
+
+        // Calculate total margin space between items
+        const marginSpace = (columns - 1) * 16; // 16px margin between items
+
+      // Calculate the width for each item
+        const itemWidth = (availableWidth - marginSpace) / columns;
+
+        // Set the row height equal to the item width to make squares
+        setRowHeight(itemWidth);
       }
     };
 
