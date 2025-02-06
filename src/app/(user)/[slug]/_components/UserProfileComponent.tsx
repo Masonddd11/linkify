@@ -15,6 +15,7 @@ import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import { AddWidgetButton } from "./AddWidgetButton";
 import { getLayout } from "@/utils/layout.helper";
+import useUpdateLayoutPositions from "../_hooks/useUpdateLayoutPositions";
 import "./UserProfileComponent.css";
 
 interface UserProfileComponentProps {
@@ -53,60 +54,21 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
   const isInitialLoad = useRef(true);
   const isDragging = useRef(false);
 
-  const updateLayoutPositions = async (newLayout: Layout[]) => {
-    // Validate layout before sending
-    if (!Array.isArray(newLayout) || newLayout.length === 0) {
-      console.error("Invalid layout data");
-      setCurrentLayout(layouts.lg);
-      return;
-    }
+  const { updateLayout, isError, error } = useUpdateLayoutPositions();
 
-    // Ensure all required fields are present
-    const validLayout = newLayout.every((item) => {
-      return (
-        item &&
-        typeof item.i === "string" &&
-        typeof item.x === "number" &&
-        typeof item.y === "number" &&
-        typeof item.w === "number" &&
-        typeof item.h === "number"
-      );
-    });
-
-    if (!validLayout) {
-      console.error("Invalid layout format");
-      setCurrentLayout(layouts.lg);
-      return;
-    }
-
-    try {
-      const response = await fetch("/api/widgets/layout", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ layouts: newLayout }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to update layout positions");
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error("Error updating layout positions:", error);
-      // Revert the layout change if it failed
+  useEffect(() => {
+    if (isError) {
+      console.error("Error updating layout:", error);
       setCurrentLayout(layouts.lg);
     }
-  };
+  }, [isError, error, layouts.lg]);
 
   const handleLayoutChange = (layout: Layout[]) => {
     setCurrentLayout(layout);
 
     // Only update positions if we're in edit mode and not in the initial load or dragging
     if (edit && !isInitialLoad.current && !isDragging.current) {
-      updateLayoutPositions(layout);
+      updateLayout(layout);
     }
 
     // After the first layout change, set initial load to false
@@ -127,7 +89,7 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
 
       // Only update positions if in edit mode
       if (edit) {
-        updateLayoutPositions(layout);
+        updateLayout(layout);
       }
     },
     [edit]
@@ -276,7 +238,7 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={edit ? { delay: 0.5 } : { delay: 1, duration: 0.5 }}
+          transition={edit ? {} : { delay: 1, duration: 0.5 }}
           className="w-full max-w-5xl mx-auto"
         >
           {/* Loading Skeleton */}
@@ -285,7 +247,7 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
             className="m-auto lg:w-[600px] xl:w-[750px] 2xl:max-w-[1500px]"
           >
             <GridLayout
-              className="layout"
+              className="layout max-h-screen overflow-y-auto no-scrollbar"
               layout={currentLayout}
               cols={3}
               rowHeight={rowHeight}

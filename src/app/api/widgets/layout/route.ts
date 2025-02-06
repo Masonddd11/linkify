@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentSession } from "@/lib/session";
+import { z } from "zod";
 
 export async function PUT(req: NextRequest) {
   // Ensure we always return a valid JSON response
@@ -14,56 +15,24 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    let body;
-    try {
-      body = await req.json();
+    const { layouts } = await req.json();
 
-      console.log("body: ", body);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error: unknown) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Invalid JSON payload",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
+    const layoutSchema = z
+      .array(
+        z.object({
+          i: z.string(),
+          x: z.number(),
+          y: z.number(),
+          w: z.number(),
+          h: z.number(),
+        })
+      )
+      .nonempty();
 
-    if (!body || typeof body !== "object") {
-      return NextResponse.json(
-        { success: false, error: "Invalid request body" },
-        { status: 400 }
-      );
-    }
-
-    const { layouts } = body;
-
-    if (!layouts || !Array.isArray(layouts) || layouts.length === 0) {
+    const result = layoutSchema.safeParse(layouts);
+    if (!result.success) {
       return NextResponse.json(
         { success: false, error: "Invalid layout data" },
-        { status: 400 }
-      );
-    }
-
-    // Validate layout objects
-    const isValidLayout = layouts.every((layout) => {
-      return (
-        layout &&
-        typeof layout === "object" &&
-        typeof layout.i === "string" &&
-        typeof layout.x === "number" &&
-        typeof layout.y === "number" &&
-        typeof layout.w === "number" &&
-        typeof layout.h === "number"
-      );
-    });
-
-    if (!isValidLayout) {
-      return NextResponse.json(
-        { success: false, error: "Invalid layout format" },
         { status: 400 }
       );
     }
@@ -83,7 +52,7 @@ export async function PUT(req: NextRequest) {
 
     // Verify all widgets belong to the user
     const userWidgetIds = new Set(userProfile.widgets.map((w) => w.id));
-    const allWidgetsBelongToUser = layouts.every((layout) =>
+    const allWidgetsBelongToUser = result.data.every((layout) =>
       userWidgetIds.has(layout.i)
     );
 

@@ -17,15 +17,23 @@ import { useWidgets } from "../_hooks/useWidgets";
 import { WIDGET_SIZE } from "@prisma/client";
 import {
   WidgetType,
-  TextContent,
-  LinkContent,
-  ImageContent,
-  EmbedContent,
-  SocialContent,
-  WidgetContent,
+  type TextContent,
+  type LinkContent,
+  type ImageContent,
+  type EmbedContent,
+  type SocialContent,
+  type WidgetContent,
 } from "@/types/widget";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface AddWidgetButtonProps {
   userId: number;
@@ -45,7 +53,6 @@ export function AddWidgetButton({ userId }: AddWidgetButtonProps) {
   const [content, setContent] = useState<WidgetContent>({} as TextContent);
 
   const { addWidget, isAdding } = useWidgets(userId);
-
   const router = useRouter();
 
   const handleSubmit = () => {
@@ -92,6 +99,7 @@ export function AddWidgetButton({ userId }: AddWidgetButtonProps) {
           setType(WidgetType.TEXT);
           setSize(WIDGET_SIZE.SMALL_SQUARE);
           setContent({} as TextContent);
+          toast.success("Widget added successfully!");
         },
       }
     );
@@ -103,29 +111,39 @@ export function AddWidgetButton({ userId }: AddWidgetButtonProps) {
     switch (type) {
       case WidgetType.TEXT:
         return (
-          <>
-            <Label htmlFor="text">Text</Label>
-            <Input
-              id="text"
-              value={(content as TextContent).text || ""}
-              onChange={(e) =>
-                setContent({ text: e.target.value } as TextContent)
-              }
-              placeholder="Enter your text"
-            />
-            <Label htmlFor="color">Color (optional)</Label>
-            <Input
-              id="color"
-              type="color"
-              value={(content as TextContent).color || "#000000"}
-              onChange={(e) =>
-                setContent({
-                  ...(content as TextContent),
-                  color: e.target.value,
-                } as TextContent)
-              }
-            />
-          </>
+          <Card>
+            <CardContent className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label htmlFor="text">Text</Label>
+                <Input
+                  id="text"
+                  value={(content as TextContent).text || ""}
+                  onChange={(e) =>
+                    setContent({ text: e.target.value } as TextContent)
+                  }
+                  placeholder="Enter your text"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="color">Color (optional)</Label>
+                <div className="flex items-center space-x-2">
+                  <Input
+                    id="color"
+                    type="color"
+                    value={(content as TextContent).color || "#000000"}
+                    onChange={(e) =>
+                      setContent({
+                        ...(content as TextContent),
+                        color: e.target.value,
+                      } as TextContent)
+                    }
+                    className="w-12 h-12 p-1 rounded"
+                  />
+                  <span>{(content as TextContent).color || "#000000"}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         );
       case WidgetType.LINK:
         return (
@@ -277,19 +295,20 @@ export function AddWidgetButton({ userId }: AddWidgetButtonProps) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <div className="col-span-3 row-span-3 w-full h-full">
-          <Button
-            variant="outline"
-            size="icon"
-            className="w-full h-full flex justify-center items-center"
-          >
-            <Plus className="h-6 w-6" />
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="lg"
+          className="w-full h-full flex flex-col justify-center items-center gap-2 border-dashed border-2 hover:border-primary"
+        >
+          <Plus className="h-6 w-6" />
+          <span>Add Widget</span>
+        </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add Widget</DialogTitle>
+          <DialogTitle className="text-2xl font-bold">
+            Add New Widget
+          </DialogTitle>
         </DialogHeader>
         <Tabs
           defaultValue={WidgetType.TEXT}
@@ -315,7 +334,7 @@ export function AddWidgetButton({ userId }: AddWidgetButtonProps) {
             }
           }}
         >
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-5 mb-4">
             <TabsTrigger value={WidgetType.TEXT}>Text</TabsTrigger>
             <TabsTrigger value={WidgetType.LINK}>Link</TabsTrigger>
             <TabsTrigger value={WidgetType.IMAGE}>Image</TabsTrigger>
@@ -326,20 +345,24 @@ export function AddWidgetButton({ userId }: AddWidgetButtonProps) {
             {renderContentInputs()}
           </TabsContent>
         </Tabs>
-        <div className="mt-4 space-y-4">
+        <div className="mt-6 space-y-4">
           <div className="space-y-2">
             <Label>Widget Size</Label>
-            <select
+            <Select
               value={size}
-              onChange={(e) => setSize(e.target.value as WIDGET_SIZE)}
-              className="w-full p-2 border rounded"
+              onValueChange={(value) => setSize(value as WIDGET_SIZE)}
             >
-              {WIDGET_SIZES.map((size) => (
-                <option key={size.value} value={size.value}>
-                  {size.label}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a size" />
+              </SelectTrigger>
+              <SelectContent>
+                {WIDGET_SIZES.map((size) => (
+                  <SelectItem key={size.value} value={size.value}>
+                    {size.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <Button
             onClick={handleSubmit}
