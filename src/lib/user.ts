@@ -175,6 +175,7 @@ export async function getProfileAndSocialsAndWidgetsBySlug(slug: string) {
               imageContent: true,
               embedContent: true,
               socialContent: true,
+              layout: true,
             },
           },
         },

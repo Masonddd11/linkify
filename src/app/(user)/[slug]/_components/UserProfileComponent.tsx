@@ -1,19 +1,20 @@
 "use client";
 
 import { Prisma } from "@prisma/client";
+import { Layout } from "react-grid-layout";
 import { WidgetContent } from "@/components/widgets/WidgetContent";
 import { SocialLinkVisualizer } from "@/components/SocialLinkVisualizer";
 import { motion } from "framer-motion";
 import EditTooltip from "./EditToolTip";
 import { ProfileImageUpload } from "./ProfileImageUpload";
-import { useEffect, useRef, useMemo, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import useUpdateUserInfo from "../_hooks/useUpdateUserInfo";
 import React from "react";
-import { Responsive, WidthProvider } from "react-grid-layout";
+import GridLayout from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import { AddWidgetButton } from "./AddWidgetButton";
-import { getDefaultLayout } from "@/utils/layout.helper";
+import { getLayout } from "@/utils/layout.helper";
 
 interface UserProfileComponentProps {
   user: Prisma.UserGetPayload<{
@@ -28,6 +29,7 @@ interface UserProfileComponentProps {
               imageContent: true;
               embedContent: true;
               socialContent: true;
+              layout: true;
             };
           };
         };
@@ -44,7 +46,91 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
   edit,
 }) => {
   const [rowHeight, setRowHeight] = useState<number>(150);
+  const layouts = getLayout(user.UserProfile?.widgets || [], edit);
+  const [currentLayout, setCurrentLayout] = useState<Layout[]>(layouts.lg);
   const gridRef = useRef<HTMLDivElement>(null);
+  const isInitialLoad = useRef(true);
+  const isDragging = useRef(false);
+
+  const updateLayoutPositions = async (newLayout: Layout[]) => {
+    // Validate layout before sending
+    if (!Array.isArray(newLayout) || newLayout.length === 0) {
+      console.error("Invalid layout data");
+      setCurrentLayout(layouts.lg);
+      return;
+    }
+
+    // Ensure all required fields are present
+    const validLayout = newLayout.every((item) => {
+      return (
+        item &&
+        typeof item.i === "string" &&
+        typeof item.x === "number" &&
+        typeof item.y === "number" &&
+        typeof item.w === "number" &&
+        typeof item.h === "number"
+      );
+    });
+
+    if (!validLayout) {
+      console.error("Invalid layout format");
+      setCurrentLayout(layouts.lg);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/widgets/layout", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ layouts: newLayout }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to update layout positions");
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error updating layout positions:", error);
+      // Revert the layout change if it failed
+      setCurrentLayout(layouts.lg);
+    }
+  };
+
+  const handleLayoutChange = (layout: Layout[]) => {
+    setCurrentLayout(layout);
+
+    // Only update positions if we're in edit mode and not in the initial load or dragging
+    if (edit && !isInitialLoad.current && !isDragging.current) {
+      updateLayoutPositions(layout);
+    }
+
+    // After the first layout change, set initial load to false
+    if (isInitialLoad.current) {
+      isInitialLoad.current = false;
+    }
+  };
+
+  const handleDrag = useCallback((layout: Layout[]) => {
+    isDragging.current = true;
+    setCurrentLayout(layout);
+  }, []);
+
+  const handleDragStop = useCallback(
+    (layout: Layout[]) => {
+      isDragging.current = false;
+      setCurrentLayout(layout);
+
+      // Only update positions if in edit mode
+      if (edit) {
+        updateLayoutPositions(layout);
+      }
+    },
+    [edit]
+  );
 
   useEffect(() => {
     const updateRowHeight = () => {
@@ -190,57 +276,50 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
           className="w-full max-w-5xl mx-auto"
         >
           {/* Loading Skeleton */}
-
-          {useMemo(() => {
-            const ResponsiveGridLayout = WidthProvider(Responsive);
-            return (
-              <div ref={gridRef}>
-                <ResponsiveGridLayout
-                  className="m-auto lg:w-[600px] xl:w-[750px] 2xl:max-w-[1500px]"
-                  layouts={getDefaultLayout(
-                    user.UserProfile?.widgets || [],
-                    edit
-                  )}
-                  breakpoints={{
-                    xl: 1280,
-                    lg: 1024,
-                    md: 768,
-                    sm: 480,
-                    xs: 320,
-                  }}
-                  cols={{ xl: 4, lg: 3, md: 2, sm: 2, xs: 1 }}
-                  margin={[12, 12]}
-                  rowHeight={rowHeight}
-                  containerPadding={[16, 16]}
-                  isDraggable={edit}
-                  useCSSTransforms={true}
-                  onLayoutChange={(layout) => {
-                    console.log("layout changed:", layout);
-                  }}
+          <div
+            ref={gridRef}
+            className="m-auto lg:w-[600px] xl:w-[750px] 2xl:max-w-[1500px]"
+          >
+            <GridLayout
+              className="layout"
+              layout={currentLayout}
+              cols={3}
+              rowHeight={rowHeight}
+              width={gridRef.current?.offsetWidth || 1200}
+              margin={[16, 16]}
+              containerPadding={[16, 16]}
+              isDraggable={edit}
+              isResizable={false}
+              useCSSTransforms={true}
+              preventCollision={false}
+              compactType={null}
+              onLayoutChange={handleLayoutChange}
+              onDrag={(layout: Layout[]) => {
+                handleDrag(layout);
+              }}
+              onDragStop={(layout) => {
+                handleDragStop(layout);
+              }}
+            >
+              {user.UserProfile?.widgets?.map((widget) => (
+                <div
+                  key={widget.id}
+                  className={`
+                        bg-white rounded-2xl
+                        border border-gray-200
+                        overflow-hidden
+                        backdrop-blur-xl backdrop-saturate-200
+                        group
+                        transition-shadow duration-200
+                        hover:shadow-[0_8px_16px_-3px_rgba(0,0,0,0.15)]
+                        ${edit ? "cursor-grab active:cursor-grabbing" : ""}
+                      `}
                 >
-                  {user.UserProfile?.widgets?.map((widget) => {
-                    return (
-                      <div
-                        key={widget.id}
-                        className={`
-                      bg-white rounded-2xl
-                      border border-gray-200
-                      overflow-hidden
-                      backdrop-blur-xl backdrop-saturate-200
-                      group
-                      transition-shadow duration-200
-                      hover:shadow-[0_8px_16px_-3px_rgba(0,0,0,0.15)]
-                      ${edit ? "cursor-grab active:cursor-grabbing" : ""}
-                    `}
-                      >
-                        <WidgetContent widget={widget} />
-                      </div>
-                    );
-                  })}
-                </ResponsiveGridLayout>
-              </div>
-            );
-          }, [user.UserProfile?.widgets, edit])}
+                  <WidgetContent widget={widget} />
+                </div>
+              ))}
+            </GridLayout>
+          </div>
         </motion.div>
       </div>
 

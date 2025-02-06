@@ -1,18 +1,23 @@
 import { Layout } from "react-grid-layout";
-import { WIDGET_SIZE, Widget } from "@prisma/client";
+import { Prisma, WIDGET_SIZE } from "@prisma/client";
 
 // Define the layout for different breakpoints
-export const getDefaultLayout = (
-  widgets: Widget[],
+export const getLayout = (
+  widgets: Prisma.WidgetGetPayload<{ include: { layout: true } }>[],
   edit: boolean
-): { [key: string]: Layout[] } => {
+): { lg: Layout[] } => {
   const generateLayout = (columnCount: number): Layout[] => {
     // Initialize a grid to track occupied spaces
     const grid: boolean[][] = [];
     const layouts: Layout[] = [];
 
     // Helper function to check if a space is available
-    const isSpaceAvailable = (x: number, y: number, w: number, h: number): boolean => {
+    const isSpaceAvailable = (
+      x: number,
+      y: number,
+      w: number,
+      h: number
+    ): boolean => {
       for (let i = y; i < y + h; i++) {
         for (let j = x; j < x + w; j++) {
           if (!grid[i]) grid[i] = [];
@@ -22,7 +27,6 @@ export const getDefaultLayout = (
       return true;
     };
 
-    // Helper function to mark space as occupied
     const occupySpace = (x: number, y: number, w: number, h: number) => {
       for (let i = y; i < y + h; i++) {
         for (let j = x; j < x + w; j++) {
@@ -32,8 +36,26 @@ export const getDefaultLayout = (
       }
     };
 
-    // Process each widget
     widgets.forEach((widget) => {
+      // Use saved layout if available
+      if (widget.layout) {
+        layouts.push({
+          i: widget.id,
+          x: widget.layout.x,
+          y: widget.layout.y,
+          w: widget.layout.w,
+          h: widget.layout.h,
+          isDraggable: edit,
+          isResizable: false,
+        });
+        occupySpace(
+          widget.layout.x,
+          widget.layout.y,
+          widget.layout.w,
+          widget.layout.h
+        );
+        return;
+      }
       let w = 1; // default width
       let h = 1; // default height
 
@@ -52,8 +74,8 @@ export const getDefaultLayout = (
           h = 1;
           break;
         case WIDGET_SIZE.LONG:
-          w = Math.min(2, columnCount);
-          h = 2;
+          w = Math.min(1, columnCount);
+          h = 2; // Make it taller than LARGE_SQUARE
           break;
         default:
           w = 1;
@@ -74,8 +96,7 @@ export const getDefaultLayout = (
               y,
               w,
               h,
-              static: true,
-              isDraggable: edit ? true : false,
+              isDraggable: edit,
               isResizable: false,
             });
             placed = true;
@@ -90,10 +111,6 @@ export const getDefaultLayout = (
   };
 
   return {
-    xl: generateLayout(3),
     lg: generateLayout(3),
-    md: generateLayout(3),
-    sm: generateLayout(2),
-    xs: generateLayout(2),
   };
 };

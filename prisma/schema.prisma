@@ -128,6 +128,7 @@ model Widget {
   type      WIDGET_TYPE
   size      WIDGET_SIZE
   position  Int
+  layout    WidgetLayout?
   profile   UserProfile @relation(fields: [profileId], references: [id])
   profileId Int
 
@@ -189,4 +190,14 @@ enum EmbedType {
   YOUTUBE
   SPOTIFY
   OTHER
+}
+
+model WidgetLayout {
+  id       String  @id @default(cuid())
+  x        Int
+  y        Int
+  w        Int
+  h        Int
+  widget   Widget  @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+  widgetId String  @unique
 }
