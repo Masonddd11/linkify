@@ -8,6 +8,8 @@ import { motion } from "framer-motion";
 import EditTooltip from "./EditToolTip";
 import { ProfileImageUpload } from "./ProfileImageUpload";
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useDebouncedCallback } from "use-debounce";
+import { useDeleteWidget } from "@/components/widgets/_hooks/useDeleteWidget";
 import useUpdateUserInfo from "../_hooks/useUpdateUserInfo";
 import React from "react";
 import GridLayout from "react-grid-layout";
@@ -50,10 +52,24 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
   const layouts = getLayout(user.UserProfile?.widgets || [], edit);
   const [currentLayout, setCurrentLayout] = useState<Layout[]>(layouts.lg);
   const gridRef = useRef<HTMLDivElement>(null);
-  const isInitialLoad = useRef(true);
   const isDragging = useRef(false);
 
   const { updateLayout, isError, error } = useUpdateLayoutPositions();
+  const { mutate: deleteWidget } = useDeleteWidget();
+
+  const handleDeleteWidget = useCallback(
+    (widgetId: string) => {
+      deleteWidget(widgetId, {
+        onSuccess: () => {
+          // Update the layout by filtering out the deleted widget
+          const newLayout = currentLayout.filter((item) => item.i !== widgetId);
+          setCurrentLayout(newLayout);
+          updateLayout(newLayout);
+        },
+      });
+    },
+    [currentLayout, updateLayout, deleteWidget]
+  );
 
   useEffect(() => {
     if (isError) {
@@ -62,36 +78,30 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
     }
   }, [isError, error, layouts.lg]);
 
-  const handleLayoutChange = (layout: Layout[]) => {
-    setCurrentLayout(layout);
+  const prevPositionsRef = useRef<{ [key: string]: { x: number; y: number } }>(
+    {}
+  );
 
-    // Only update positions if we're in edit mode and not in the initial load or dragging
-    if (edit && !isInitialLoad.current && !isDragging.current) {
-      updateLayout(layout);
-    }
-
-    // After the first layout change, set initial load to false
-    if (isInitialLoad.current) {
-      isInitialLoad.current = false;
-    }
-  };
-
-  const handleDrag = useCallback((layout: Layout[]) => {
-    isDragging.current = true;
-    setCurrentLayout(layout);
+  const hasPositionChanged = useCallback((layout: Layout[]) => {
+    let changed = false;
+    layout.forEach((item) => {
+      const prev = prevPositionsRef.current[item.i];
+      if (!prev || prev.x !== item.x || prev.y !== item.y) {
+        changed = true;
+      }
+      prevPositionsRef.current[item.i] = { x: item.x, y: item.y };
+    });
+    return changed;
   }, []);
 
-  const handleDragStop = useCallback(
+  const debouncedUpdateLayout = useDebouncedCallback(
     (layout: Layout[]) => {
-      isDragging.current = false;
-      setCurrentLayout(layout);
-
-      // Only update positions if in edit mode
-      if (edit) {
+      if (hasPositionChanged(layout)) {
         updateLayout(layout);
       }
     },
-    [edit]
+    500,
+    { maxWait: 2000 }
   );
 
   useEffect(() => {
@@ -258,15 +268,19 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
               useCSSTransforms={true}
               preventCollision={false}
               compactType={null}
-              onLayoutChange={handleLayoutChange}
+              onDragStart={() => {
+                isDragging.current = true;
+              }}
               onDrag={(layout: Layout[]) => {
-                if (edit) {
-                  handleDrag(layout);
+                if (edit && isDragging.current) {
+                  setCurrentLayout(layout);
                 }
               }}
               onDragStop={(layout) => {
                 if (edit) {
-                  handleDragStop(layout);
+                  isDragging.current = false;
+                  setCurrentLayout(layout);
+                  debouncedUpdateLayout(layout);
                 }
               }}
             >
@@ -276,7 +290,6 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
                   className={`
                         bg-white rounded-2xl
                         border border-gray-200
-                        overflow-hidden
                         backdrop-blur-xl backdrop-saturate-200
                         group
                         transition-shadow duration-200
@@ -284,7 +297,11 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
                         ${edit ? "cursor-grab active:cursor-grabbing" : ""}
                       `}
                 >
-                  <WidgetContent widget={widget} edit={edit} />
+                  <WidgetContent
+                    widget={widget}
+                    edit={edit}
+                    onDelete={handleDeleteWidget}
+                  />
                 </div>
               ))}
             </GridLayout>
