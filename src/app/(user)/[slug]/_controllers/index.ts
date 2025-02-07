@@ -315,3 +315,106 @@ export async function updateWidgetLayouts(req: NextRequest) {
     );
   }
 }
+
+const textUpdateSchema = z.object({
+  widgetId: z.string(),
+  text: z.string().optional(),
+  color: z.string().optional(),
+});
+
+export async function updateTextWidgets(request: NextRequest) {
+  try {
+    const { session, user } = await getCurrentSession();
+    if (!session) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { text, widgetId, color } = textUpdateSchema.parse(body);
+
+    const widget = await prisma.widget.findUnique({
+      where: { id: widgetId },
+      include: {
+        profile: true,
+        textContent: true,
+      },
+    });
+
+    if (!widget) {
+      return NextResponse.json(
+        { message: "Widget not found" },
+        { status: 404 }
+      );
+    }
+
+    if (widget.profile.userId !== user.id) {
+      return NextResponse.json(
+        { message: "Unauthorized to modify this widget" },
+        { status: 403 }
+      );
+    }
+
+    const updatedTextContent = await prisma.textContent.update({
+      where: { widgetId },
+      data: { text, color },
+    });
+
+    return NextResponse.json(updatedTextContent);
+  } catch (error) {
+    console.error("Error updating widget text:", error);
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { message: "Invalid text data", errors: error.errors },
+        { status: 400 }
+      );
+    }
+    return NextResponse.json(
+      { message: "Failed to update widget text" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function deleteWidget(request: Request) {
+  const { session, user } = await getCurrentSession();
+  if (!session) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  //check widget ownership
+  const { id } = await request.json();
+
+  if (!id) {
+    return NextResponse.json({ message: "Invalid widget ID" }, { status: 400 });
+  }
+
+  const widget = await prisma.widget.findUnique({
+    where: { id },
+    include: {
+      profile: true,
+    },
+  });
+
+  if (!widget) {
+    return NextResponse.json({ message: "Widget not found" }, { status: 404 });
+  }
+
+  if (widget.profile.userId !== user.id) {
+    return NextResponse.json(
+      { message: "Unauthorized to modify this widget" },
+      { status: 403 }
+    );
+  }
+
+  try {
+    const widget = await prisma.widget.delete({
+      where: {
+        id,
+      },
+    });
+
+    return NextResponse.json(widget);
+  } catch (error: unknown) {
+    return NextResponse.json({ error: error }, { status: 500 });
+  }
+}

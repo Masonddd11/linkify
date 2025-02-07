@@ -1,37 +1,50 @@
 "use client";
 
-import type { TextContent } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { useState } from "react";
+import { useWidgetText } from "./_hooks/useWidgetText";
 
 export function TextWidget({
-  content,
+  widget,
   edit,
-  onUpdate,
 }: {
-  content: TextContent | null | undefined;
+  widget:
+    | Prisma.WidgetGetPayload<{ include: { textContent: true } }>
+    | null
+    | undefined;
   edit: boolean;
-  onUpdate?: (text: string) => void;
 }) {
-  const [text, setText] = useState(content?.text || "");
+  const [text, setText] = useState(widget?.textContent?.text || "");
+  const { updateText, isError, error } = useWidgetText();
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setText(e.target.value);
+    const newText = e.target.value;
+    setText(newText);
+    if (widget?.id) {
+      updateText({ widgetId: widget.id, text: newText });
+    }
   };
 
-  const textStyles = content?.color ? { color: content.color } : {};
+  if (isError && error instanceof Error) {
+    console.error("Failed to update text:", error.message);
+  }
+
+  const textStyles = widget?.textContent?.color
+    ? { color: widget.textContent.color }
+    : {};
   const commonClasses =
     "w-full text-2xl leading-normal font-[450] tracking-tight text-left";
 
   return (
-    <div className="w-full h-full p-2 transition-all duration-200">
-      <div className="w-full h-full bg-white rounded-md overflow-hidden">
-        <div className="w-full h-full p-6 hover:bg-gray-50 transition-all duration-200">
+    <div className="w-full h-full p-2  ">
+      <div className="w-full h-full rounded-md overflow-hidden hover:bg-gray-50 ">
+        <div className="w-full h-full p-6  transition-all duration-200">
           {edit ? (
             <textarea
               value={text}
               onChange={handleChange}
               style={textStyles}
-              className={`${commonClasses} min-h-[120px] bg-transparent resize-none outline-none border-none rounded-lg px-3`}
+              className={`${commonClasses} h-full w-full no-scrollbar box-border bg-transparent resize-none outline-none border-none rounded-lg px-3`}
               placeholder="Start typing..."
             />
           ) : (
