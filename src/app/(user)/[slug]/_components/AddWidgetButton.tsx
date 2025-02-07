@@ -30,13 +30,10 @@ import {
   type ImageContent,
   type EmbedContent,
   type SocialContent,
+  type WidgetContent,
 } from "@/types/widget";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
-
-interface AddWidgetButtonProps {
-  userId: number;
-}
 
 const WIDGET_CATEGORIES = [
   {
@@ -132,13 +129,13 @@ const WIDGET_CATEGORIES = [
   },
 ];
 
-export function AddWidgetButton({ userId }: AddWidgetButtonProps) {
+export function AddWidgetButton() {
   const [isOpen, setIsOpen] = useState(false);
-  const { addWidget, isAdding } = useWidgets(userId);
+  const { addWidget, isAdding } = useWidgets();
   const router = useRouter();
 
   const handleSelectWidget = (type: string) => {
-    let widgetContent;
+    let widgetContent: WidgetContent;
     let widgetType = type as WidgetType;
 
     switch (type) {
@@ -210,13 +207,14 @@ export function AddWidgetButton({ userId }: AddWidgetButtonProps) {
         } as SocialContent;
         break;
       default:
-        widgetContent = {};
+        // Handle unknown widget type
+        widgetContent = { text: "" } as TextContent;
+        widgetType = WidgetType.TEXT;
         break;
     }
 
     addWidget(
       {
-        userId,
         type: widgetType,
         size: WIDGET_SIZE.SMALL_SQUARE,
         content: widgetContent,
@@ -240,10 +238,10 @@ export function AddWidgetButton({ userId }: AddWidgetButtonProps) {
         <Button
           variant="outline"
           size="lg"
-          className="w-full h-full flex flex-col justify-center items-center gap-2 border-dashed border-2 hover:border-primary"
+          className="w-full h-full flex p-2 justify-center items-center gap-2 border-dashed border-2 "
         >
           <Plus className="h-6 w-6" />
-          <span>Add Widget</span>
+          <span className="text-sm font-bold">Add Widget</span>
         </Button>
       </SheetTrigger>
       <SheetContent

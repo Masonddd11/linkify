@@ -1,8 +1,9 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Copy, Edit3 } from "lucide-react";
+import { Copy, Edit3 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { AddWidgetButton } from "./AddWidgetButton";
 
 export default function EditTooltip({ edit }: { edit: boolean }) {
   const router = useRouter();
@@ -59,6 +60,9 @@ export default function EditTooltip({ edit }: { edit: boolean }) {
             {edit ? "Done" : "Edit Profile"}
           </span>
         </Button>
+        {/* Divider */}
+        <div className="w-px h-5 bg-gray-200/80 mx-1" />
+        <AddWidgetButton />
       </div>
     </div>
   );

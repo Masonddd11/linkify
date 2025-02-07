@@ -7,7 +7,9 @@ import { Prisma, WIDGET_TYPE } from "@prisma/client";
 
 export function WidgetContent({
   widget,
+  edit,
 }: {
+  edit: boolean;
   widget: Prisma.WidgetGetPayload<{
     include: {
       textContent: true;
@@ -21,7 +23,7 @@ export function WidgetContent({
   switch (widget.type) {
     case WIDGET_TYPE.TEXT:
       if (!widget.textContent) return null;
-      return <TextWidget content={widget.textContent} />;
+      return <TextWidget content={widget.textContent} edit={edit} />;
     case WIDGET_TYPE.LINK:
       if (!widget.linkContent) return null;
       return <LinkWidget content={widget.linkContent} />;

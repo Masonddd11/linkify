@@ -6,7 +6,6 @@ import toast from "react-hot-toast";
 import { WidgetType, WidgetContent } from "@/types/widget";
 
 interface AddWidgetParams {
-  userId: number;
   type: WidgetType;
   size: WIDGET_SIZE;
   content: WidgetContent;
@@ -50,7 +49,7 @@ interface WidgetResponse {
   } | null;
 }
 
-export function useWidgets(profileUserId: number) {
+export function useWidgets() {
   const queryClient = useQueryClient();
 
   const { mutate: addWidget, isPending: isAdding } = useMutation<
@@ -66,7 +65,6 @@ export function useWidgets(profileUserId: number) {
         },
         body: JSON.stringify({
           ...params,
-          userId: profileUserId,
           content: params.content,
         }),
       });

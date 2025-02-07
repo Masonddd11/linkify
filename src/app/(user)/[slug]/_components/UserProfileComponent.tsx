@@ -13,7 +13,6 @@ import React from "react";
 import GridLayout from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
-import { AddWidgetButton } from "./AddWidgetButton";
 import { getLayout } from "@/utils/layout.helper";
 import useUpdateLayoutPositions from "../_hooks/useUpdateLayoutPositions";
 import "./UserProfileComponent.css";
@@ -234,7 +233,7 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
         </motion.div>
       </div>
       {/* Right Section - Grid */}
-      <div className="flex-[2.5] min-h-screen overflow-y-auto p-6 ">
+      <div className="flex-[2.5] min-h-screen overflow-y-auto lg:p-6 p-2 overflow-visible ">
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -285,7 +284,7 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
                         ${edit ? "cursor-grab active:cursor-grabbing" : ""}
                       `}
                 >
-                  <WidgetContent widget={widget} />
+                  <WidgetContent widget={widget} edit={edit} />
                 </div>
               ))}
             </GridLayout>
@@ -298,7 +297,6 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
         <>
           <div className="fixed bottom-8 right-1/2 translate-x-1/2">
             <EditTooltip edit={edit} />
-            <AddWidgetButton userId={user.id} />
           </div>
         </>
       )}
