@@ -18,6 +18,7 @@ import "react-resizable/css/styles.css";
 import { getLayout } from "@/utils/layout.helper";
 import useUpdateLayoutPositions from "../_hooks/useUpdateLayoutPositions";
 import "./UserProfileComponent.css";
+import { useRouter } from "next/navigation";
 
 interface UserProfileComponentProps {
   user: Prisma.UserGetPayload<{
@@ -50,44 +51,48 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
 }) => {
   const [rowHeight, setRowHeight] = useState<number>(150);
   const [isMobile, setIsMobile] = useState(false);
-  const layouts = getLayout(user.UserProfile?.widgets || [], edit, isMobile);
-  const [currentLayout, setCurrentLayout] = useState<Layout[]>(layouts.lg);
-
-  // Update layout when mobile state changes
-  useEffect(() => {
-    const newLayouts = getLayout(
-      user.UserProfile?.widgets || [],
-      edit,
-      isMobile
-    );
-    setCurrentLayout(newLayouts.lg);
-  }, [isMobile, user.UserProfile?.widgets, edit]);
+  const [isDeleting, setIsDeleting] = useState(false);
+  // Generate layout based on current widgets and mobile state
+  const currentLayout = getLayout(
+    user.UserProfile?.widgets || [],
+    edit,
+    isMobile
+  ).lg;
   const gridRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
 
   const { updateLayout, isError, error } = useUpdateLayoutPositions();
   const { mutate: deleteWidget } = useDeleteWidget();
 
+  const router = useRouter();
+
   const handleDeleteWidget = useCallback(
-    (widgetId: string) => {
-      deleteWidget(widgetId, {
-        onSuccess: () => {
-          // Update the layout by filtering out the deleted widget
-          const newLayout = currentLayout.filter((item) => item.i !== widgetId);
-          setCurrentLayout(newLayout);
-          updateLayout(newLayout);
-        },
-      });
+    async (widgetId: string) => {
+      if (isDeleting) return; // Prevent multiple deletions
+      
+      try {
+        setIsDeleting(true);
+        // First delete the widget
+        await deleteWidget(widgetId);
+        
+        // Wait a bit before refreshing to ensure deletion is complete
+        setTimeout(() => {
+          router.refresh();
+          setIsDeleting(false);
+        }, 500);
+      } catch (error) {
+        console.error("Error deleting widget:", error);
+        setIsDeleting(false);
+      }
     },
-    [currentLayout, updateLayout, deleteWidget]
+    [deleteWidget, router, isDeleting]
   );
 
   useEffect(() => {
     if (isError) {
       console.error("Error updating layout:", error);
-      setCurrentLayout(layouts.lg);
     }
-  }, [isError, error, layouts.lg]);
+  }, [isError, error]);
 
   const prevPositionsRef = useRef<{ [key: string]: { x: number; y: number } }>(
     {}
@@ -111,7 +116,7 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
         updateLayout(layout);
       }
     },
-    500,
+    1500,
     { maxWait: 2000 }
   );
 
@@ -285,16 +290,17 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
               onDragStart={() => {
                 isDragging.current = true;
               }}
-              onDrag={(layout: Layout[]) => {
-                if (edit && isDragging.current) {
-                  setCurrentLayout(layout);
-                }
-              }}
               onDragStop={(layout) => {
-                if (edit) {
+                if (edit && !isDeleting && isDragging.current) {
                   isDragging.current = false;
-                  setCurrentLayout(layout);
-                  debouncedUpdateLayout(layout);
+                  const filteredLayout = layout.filter((item) =>
+                    user.UserProfile?.widgets?.some(
+                      (widget) => widget.id === item.i
+                    )
+                  );
+                  if (filteredLayout.length > 0) {
+                    debouncedUpdateLayout(filteredLayout);
+                  }
                 }
               }}
             >

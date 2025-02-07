@@ -1,4 +1,4 @@
-import { WIDGET_SIZE } from "@prisma/client";
+import { WIDGET_SIZE, PLATFORM } from "@prisma/client";
 import { JsonObject } from "@prisma/client/runtime/library";
 
 export enum WidgetSize {
@@ -63,6 +63,7 @@ export interface LinkContent extends JsonObject {
   title: string;
   description?: string;
   thumbnail?: string;
+  platform: PLATFORM;
 }
 
 export interface ImageContent extends JsonObject {
