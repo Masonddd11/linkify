@@ -17,15 +17,21 @@ export async function updateUserInfo(request: NextRequest) {
     displayName: z
       .string()
       .optional()
-      .refine((val) => val === undefined || (val.length >= 1 && val.length <= 32), {
-        message: "Display name must be 1-32 characters",
-      }),
+      .refine(
+        (val) => val === undefined || (val.length >= 1 && val.length <= 32),
+        {
+          message: "Display name must be 1-32 characters",
+        }
+      ),
     bio: z
       .string()
       .optional()
-      .refine((val) => val === undefined || (val.length >= 0 && val.length <= 160), {
-        message: "Bio must be 0-160 characters",
-      }),
+      .refine(
+        (val) => val === undefined || (val.length >= 0 && val.length <= 160),
+        {
+          message: "Bio must be 0-160 characters",
+        }
+      ),
   });
 
   const parsedBody = schema.safeParse(body);
@@ -57,6 +63,254 @@ export async function updateUserInfo(request: NextRequest) {
     console.error("Profile update error:", error);
     return NextResponse.json(
       { message: "Failed to update profile" },
+      { status: 500 }
+    );
+  }
+}
+
+import { WIDGET_SIZE, WIDGET_TYPE, EmbedType } from "@prisma/client";
+
+const widgetSchema = z.object({
+  type: z.nativeEnum(WIDGET_TYPE),
+  size: z.nativeEnum(WIDGET_SIZE),
+  content: z.record(z.any()),
+});
+
+export async function addWidget(request: NextRequest) {
+  const { session, user } = await getCurrentSession();
+
+  if (!session) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const body = await request.json();
+    const { type, size, content } = widgetSchema.parse(body);
+
+    // Check if the user exists and has a profile
+    const userProfile = await prisma.userProfile.findUnique({
+      where: { userId: user.id },
+      include: {
+        widgets: {
+          include: {
+            textContent: true,
+            linkContent: true,
+            imageContent: true,
+            embedContent: true,
+            socialContent: true,
+          },
+        },
+      },
+    });
+
+    if (!userProfile) {
+      return NextResponse.json(
+        { message: "User profile not found" },
+        { status: 404 }
+      );
+    }
+
+    // Get the highest position for the current profile's widgets
+    const highestPositionWidget = await prisma.widget.findFirst({
+      where: { profileId: userProfile.id },
+      orderBy: { position: "desc" },
+    });
+
+    const nextPosition = (highestPositionWidget?.position ?? -1) + 1;
+
+    // Create the widget with the appropriate content type
+    const widget = await prisma.widget.create({
+      data: {
+        type,
+        size,
+        position: nextPosition,
+        profile: {
+          connect: { id: userProfile.id },
+        },
+        ...(type === WIDGET_TYPE.TEXT && {
+          textContent: {
+            create: content as { text: string; color?: string },
+          },
+        }),
+        ...(type === WIDGET_TYPE.LINK && {
+          linkContent: {
+            create: content as {
+              url: string;
+              title: string;
+              description?: string;
+              thumbnail?: string;
+            },
+          },
+        }),
+        ...(type === WIDGET_TYPE.IMAGE && {
+          imageContent: {
+            create: content as { url: string; alt?: string },
+          },
+        }),
+        ...(type === WIDGET_TYPE.EMBED && {
+          embedContent: {
+            create: {
+              embedUrl: content.embedUrl,
+              type: content.type.toUpperCase() as EmbedType,
+            },
+          },
+        }),
+        ...(type === WIDGET_TYPE.SOCIAL && {
+          socialContent: {
+            create: content as {
+              platform: string;
+              username: string;
+              profileUrl: string;
+            },
+          },
+        }),
+      },
+      include: {
+        textContent: true,
+        linkContent: true,
+        imageContent: true,
+        embedContent: true,
+        socialContent: true,
+      },
+    });
+
+    return NextResponse.json(widget);
+  } catch (error) {
+    console.error("Error creating widget:", error);
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { message: "Invalid widget data", errors: error.errors },
+        { status: 400 }
+      );
+    }
+    return NextResponse.json(
+      { message: "Failed to create widget" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  const session = await getCurrentSession();
+
+  if (!session) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    // Get widget ID from the URL
+    const url = new URL(request.url);
+    const pathParts = url.pathname.split("/");
+    const widgetId = pathParts[pathParts.length - 1];
+
+    if (!widgetId) {
+      return NextResponse.json(
+        { message: "Invalid widget ID" },
+        { status: 400 }
+      );
+    }
+
+    await prisma.widget.delete({
+      where: { id: widgetId },
+    });
+
+    return NextResponse.json({ message: "Widget deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting widget:", error);
+    return NextResponse.json(
+      { message: "Failed to delete widget" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function updateWidgetLayouts(req: NextRequest) {
+  try {
+    const { session, user } = await getCurrentSession();
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const { layouts } = await req.json();
+
+    const layoutSchema = z
+      .array(
+        z.object({
+          i: z.string(),
+          x: z.number(),
+          y: z.number(),
+          w: z.number(),
+          h: z.number(),
+        })
+      )
+      .nonempty();
+
+    const result = layoutSchema.safeParse(layouts);
+    if (!result.success) {
+      return NextResponse.json(
+        { success: false, error: "Invalid layout data" },
+        { status: 400 }
+      );
+    }
+
+    // Get the user's profile to verify ownership
+    const userProfile = await prisma.userProfile.findUnique({
+      where: { userId: user.id },
+      include: { widgets: true },
+    });
+
+    if (!userProfile) {
+      return NextResponse.json(
+        { success: false, error: "User profile not found" },
+        { status: 404 }
+      );
+    }
+
+    // Verify all widgets belong to the user
+    const userWidgetIds = new Set(userProfile.widgets.map((w) => w.id));
+    const allWidgetsBelongToUser = result.data.every((layout) =>
+      userWidgetIds.has(layout.i)
+    );
+
+    if (!allWidgetsBelongToUser) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized to modify these widgets" },
+        { status: 403 }
+      );
+    }
+
+    console.log("Starting layout updates...");
+
+    // Update layouts one by one to better track errors
+    for (const layout of layouts) {
+      const { i: id, x, y, w, h } = layout;
+      console.log(`Updating layout for widget ${id}...`);
+
+      try {
+        await prisma.widgetLayout.upsert({
+          where: { widgetId: id },
+          create: { x, y, w, h, widgetId: id },
+          update: { x, y, w, h },
+        });
+
+        console.log(`Successfully updated layout for widget ${id}`);
+      } catch (error) {
+        console.error(`Error updating layout for widget ${id}:`, error);
+        throw error;
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Layout updated successfully",
+    });
+  } catch (error) {
+    console.error("Error updating layouts:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to update layouts" },
       { status: 500 }
     );
   }
