@@ -5,10 +5,12 @@ import {
   Plus,
   ChevronRight,
   Link,
+  List,
+  Video,
+  MonitorPlay,
   ImageIcon,
   Type,
   Share2,
-  Code,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,19 +19,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-  SheetFooter,
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useWidgets } from "../_hooks/useWidgets";
 import { WIDGET_SIZE } from "@prisma/client";
 import {
@@ -39,7 +30,6 @@ import {
   type ImageContent,
   type EmbedContent,
   type SocialContent,
-  type WidgetContent,
 } from "@/types/widget";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
@@ -47,13 +37,6 @@ import { useRouter } from "next/navigation";
 interface AddWidgetButtonProps {
   userId: number;
 }
-
-const WIDGET_SIZES = [
-  { value: WIDGET_SIZE.SMALL_SQUARE, label: "Small Square" },
-  { value: WIDGET_SIZE.LARGE_SQUARE, label: "Large Square" },
-  { value: WIDGET_SIZE.WIDE, label: "Wide" },
-  { value: WIDGET_SIZE.LONG, label: "Long" },
-];
 
 const WIDGET_CATEGORIES = [
   {
@@ -71,255 +54,233 @@ const WIDGET_CATEGORIES = [
         type: WidgetType.LINK,
         color: "bg-blue-100",
       },
+      { icon: List, label: "List", type: "LIST", color: "bg-blue-100" },
+      { icon: Video, label: "Video", type: "VIDEO", color: "bg-blue-100" },
+      {
+        icon: MonitorPlay,
+        label: "Custom content",
+        type: "CUSTOM",
+        color: "bg-blue-100",
+      },
       {
         icon: ImageIcon,
-        label: "Image",
-        type: WidgetType.IMAGE,
+        label: "Media banner",
+        type: "MEDIA",
         color: "bg-blue-100",
       },
+    ],
+  },
+  {
+    title: "Promote",
+    items: [
+      { icon: Plus, label: "Product", type: "PRODUCT", color: "bg-purple-100" },
       {
-        icon: Code,
-        label: "Embed",
-        type: WidgetType.EMBED,
-        color: "bg-blue-100",
+        icon: Plus,
+        label: "Booking service",
+        type: "BOOKING",
+        color: "bg-purple-100",
       },
+      { icon: Plus, label: "Blog post", type: "BLOG", color: "bg-purple-100" },
+      { icon: Plus, label: "Event", type: "EVENT", color: "bg-purple-100" },
       {
         icon: Share2,
-        label: "Social",
+        label: "Social profile",
         type: WidgetType.SOCIAL,
-        color: "bg-blue-100",
+        color: "bg-purple-100",
       },
+    ],
+  },
+  {
+    title: "Collect leads",
+    items: [
+      {
+        icon: Plus,
+        label: "Contact form",
+        type: "CONTACT_FORM",
+        color: "bg-orange-100",
+      },
+      {
+        icon: Plus,
+        label: "Contact card",
+        type: "CONTACT_CARD",
+        color: "bg-orange-100",
+      },
+      {
+        icon: Plus,
+        label: "Contact button",
+        type: "CONTACT_BUTTON",
+        color: "bg-orange-100",
+      },
+      {
+        icon: Plus,
+        label: "Scheduling",
+        type: "SCHEDULING",
+        color: "bg-orange-100",
+      },
+    ],
+  },
+  {
+    title: "Integrate",
+    items: [
+      { icon: Plus, label: "YouTube", type: "YOUTUBE", color: "bg-gray-100" },
+      { icon: Plus, label: "X", type: "TWITTER", color: "bg-gray-100" },
+      { icon: Plus, label: "TikTok", type: "TIKTOK", color: "bg-gray-100" },
+      { icon: Plus, label: "Facebook", type: "FACEBOOK", color: "bg-gray-100" },
+      { icon: Plus, label: "Twitch", type: "TWITCH", color: "bg-gray-100" },
+      { icon: Plus, label: "Spotify", type: "SPOTIFY", color: "bg-gray-100" },
     ],
   },
 ];
 
 export function AddWidgetButton({ userId }: AddWidgetButtonProps) {
-  const [isTypeSelectOpen, setIsTypeSelectOpen] = useState(false);
-  const [isConfigOpen, setIsConfigOpen] = useState(false);
-  const [type, setType] = useState<WidgetType>(WidgetType.TEXT);
-  const [size, setSize] = useState<WIDGET_SIZE>(WIDGET_SIZE.SMALL_SQUARE);
-  const [content, setContent] = useState<WidgetContent>({} as TextContent);
-
+  const [isOpen, setIsOpen] = useState(false);
   const { addWidget, isAdding } = useWidgets(userId);
   const router = useRouter();
 
-  const handleSelectWidget = (selectedType: WidgetType) => {
-    setType(selectedType);
-    setIsTypeSelectOpen(false);
-    setIsConfigOpen(true);
-    // Reset content when changing type
-    switch (selectedType) {
-      case WidgetType.TEXT:
-        setContent({} as TextContent);
-        break;
-      case WidgetType.LINK:
-        setContent({} as LinkContent);
-        break;
-      case WidgetType.IMAGE:
-        setContent({} as ImageContent);
-        break;
-      case WidgetType.EMBED:
-        setContent({} as EmbedContent);
-        break;
-      case WidgetType.SOCIAL:
-        setContent({} as SocialContent);
-        break;
-    }
-  };
+  const handleSelectWidget = (type: string) => {
+    let widgetContent;
+    let widgetType = type as WidgetType;
 
-  const handleSubmit = () => {
-    // Validate required fields based on widget type
-    let isValid = false;
     switch (type) {
       case WidgetType.TEXT:
-        isValid = !!(content as TextContent).text;
+        widgetContent = { text: "" } as TextContent;
         break;
       case WidgetType.LINK:
-        isValid =
-          !!(content as LinkContent).url && !!(content as LinkContent).title;
+        widgetContent = { url: "", title: "" } as LinkContent;
         break;
       case WidgetType.IMAGE:
-        isValid = !!(content as ImageContent).url;
+        widgetContent = { url: "", alt: "" } as ImageContent;
         break;
       case WidgetType.EMBED:
-        isValid = !!(content as EmbedContent).embedUrl;
+        widgetContent = { embedUrl: "", type: "other" } as EmbedContent;
         break;
       case WidgetType.SOCIAL:
-        isValid = !!(
-          (content as SocialContent).platform &&
-          (content as SocialContent).username &&
-          (content as SocialContent).profileUrl
-        );
+        widgetContent = {
+          platform: "",
+          username: "",
+          profileUrl: "",
+        } as SocialContent;
         break;
-    }
-
-    if (!isValid) {
-      toast.error("Please fill in all required fields");
-      return;
+      case "YOUTUBE":
+        widgetType = WidgetType.SOCIAL;
+        widgetContent = {
+          platform: "YouTube",
+          username: "",
+          profileUrl: "",
+        } as SocialContent;
+        break;
+      case "TWITTER":
+        widgetType = WidgetType.SOCIAL;
+        widgetContent = {
+          platform: "Twitter",
+          username: "",
+          profileUrl: "",
+        } as SocialContent;
+        break;
+      case "TIKTOK":
+        widgetType = WidgetType.SOCIAL;
+        widgetContent = {
+          platform: "TikTok",
+          username: "",
+          profileUrl: "",
+        } as SocialContent;
+        break;
+      case "FACEBOOK":
+        widgetType = WidgetType.SOCIAL;
+        widgetContent = {
+          platform: "Facebook",
+          username: "",
+          profileUrl: "",
+        } as SocialContent;
+        break;
+      case "TWITCH":
+        widgetType = WidgetType.SOCIAL;
+        widgetContent = {
+          platform: "Twitch",
+          username: "",
+          profileUrl: "",
+        } as SocialContent;
+        break;
+      case "SPOTIFY":
+        widgetType = WidgetType.SOCIAL;
+        widgetContent = {
+          platform: "Spotify",
+          username: "",
+          profileUrl: "",
+        } as SocialContent;
+        break;
+      default:
+        widgetContent = {};
+        break;
     }
 
     addWidget(
       {
         userId,
-        type,
-        size,
-        content,
+        type: widgetType,
+        size: WIDGET_SIZE.SMALL_SQUARE,
+        content: widgetContent,
       },
       {
         onSuccess: () => {
-          setIsConfigOpen(false);
-          setType(WidgetType.TEXT);
-          setSize(WIDGET_SIZE.SMALL_SQUARE);
-          setContent({} as TextContent);
-          toast.success("Widget added successfully!");
+          setIsOpen(false);
+          toast.success(`${type} widget added successfully!`);
+          router.refresh();
+        },
+        onError: (error) => {
+          toast.error(`Failed to add widget: ${error.message}`);
         },
       }
     );
-
-    router.refresh();
-  };
-
-  const renderContentInputs = () => {
-    switch (type) {
-      case WidgetType.TEXT:
-        return (
-          <Card>
-            <CardContent className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label htmlFor="text">Text</Label>
-                <Input
-                  id="text"
-                  value={(content as TextContent).text || ""}
-                  onChange={(e) =>
-                    setContent({ text: e.target.value } as TextContent)
-                  }
-                  placeholder="Enter your text"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="color">Color (optional)</Label>
-                <div className="flex items-center space-x-2">
-                  <Input
-                    id="color"
-                    type="color"
-                    value={(content as TextContent).color || "#000000"}
-                    onChange={(e) =>
-                      setContent({
-                        ...(content as TextContent),
-                        color: e.target.value,
-                      } as TextContent)
-                    }
-                    className="w-12 h-12 p-1 rounded"
-                  />
-                  <span>{(content as TextContent).color || "#000000"}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
-      // Other cases remain the same...
-      default:
-        return null;
-    }
   };
 
   return (
-    <>
-      <Sheet open={isTypeSelectOpen} onOpenChange={setIsTypeSelectOpen}>
-        <SheetTrigger asChild>
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full h-full flex flex-col justify-center items-center gap-2 border-dashed border-2 hover:border-primary"
-          >
-            <Plus className="h-6 w-6" />
-            <span>Add Widget</span>
-          </Button>
-        </SheetTrigger>
-        <SheetContent
-          side="right"
-          className="w-[400px] sm:w-[540px] sm:max-w-none"
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetTrigger asChild>
+        <Button
+          variant="outline"
+          size="lg"
+          className="w-full h-full flex flex-col justify-center items-center gap-2 border-dashed border-2 hover:border-primary"
         >
-          <SheetHeader>
-            <SheetTitle className="text-xl font-semibold">
-              Choose Widget Type
-            </SheetTitle>
-          </SheetHeader>
-          <ScrollArea className="h-[calc(100vh-80px)] pr-4">
-            <div className="space-y-6 py-6">
-              {WIDGET_CATEGORIES.map((category) => (
-                <div key={category.title} className="space-y-3">
-                  <h3 className="text-sm font-medium text-muted-foreground">
-                    {category.title}
-                  </h3>
-                  <div className="space-y-1">
-                    {category.items.map((item) => (
-                      <button
-                        key={item.type}
-                        onClick={() => handleSelectWidget(item.type)}
-                        className="w-full flex items-center space-x-3 rounded-lg px-3 py-2 hover:bg-accent text-sm"
-                      >
-                        <div className={`p-2 rounded-lg ${item.color}`}>
-                          <item.icon className="h-4 w-4" />
-                        </div>
-                        <span className="flex-1 text-left">{item.label}</span>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                      </button>
-                    ))}
-                  </div>
+          <Plus className="h-6 w-6" />
+          <span>Add Widget</span>
+        </Button>
+      </SheetTrigger>
+      <SheetContent
+        side="right"
+        className="w-[400px] sm:w-[540px] sm:max-w-none"
+      >
+        <SheetHeader>
+          <SheetTitle className="text-xl font-semibold">Add Widget</SheetTitle>
+        </SheetHeader>
+        <ScrollArea className="h-[calc(100vh-80px)] pr-4">
+          <div className="space-y-6 py-6">
+            {WIDGET_CATEGORIES.map((category) => (
+              <div key={category.title} className="space-y-3">
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  {category.title}
+                </h3>
+                <div className="space-y-1">
+                  {category.items.map((item) => (
+                    <button
+                      key={item.type}
+                      onClick={() => handleSelectWidget(item.type)}
+                      className="w-full flex items-center space-x-3 rounded-lg px-3 py-2 hover:bg-accent text-sm"
+                      disabled={isAdding}
+                    >
+                      <div className={`p-2 rounded-lg ${item.color}`}>
+                        <item.icon className="h-4 w-4" />
+                      </div>
+                      <span className="flex-1 text-left">{item.label}</span>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </ScrollArea>
-        </SheetContent>
-      </Sheet>
-
-      <Sheet open={isConfigOpen} onOpenChange={setIsConfigOpen}>
-        <SheetContent
-          side="right"
-          className="w-[400px] sm:w-[540px] sm:max-w-none"
-        >
-          <SheetHeader>
-            <SheetTitle className="text-xl font-semibold">
-              Configure Widget
-            </SheetTitle>
-          </SheetHeader>
-          <ScrollArea className="h-[calc(100vh-200px)] pr-4">
-            <div className="space-y-6 py-6">
-              {renderContentInputs()}
-              <div className="space-y-2">
-                <Label>Widget Size</Label>
-                <Select
-                  value={size}
-                  onValueChange={(value) => setSize(value as WIDGET_SIZE)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a size" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {WIDGET_SIZES.map((size) => (
-                      <SelectItem key={size.value} value={size.value}>
-                        {size.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
-            </div>
-          </ScrollArea>
-          <SheetFooter className="pt-4">
-            <Button
-              onClick={handleSubmit}
-              disabled={
-                isAdding || !content || Object.keys(content).length === 0
-              }
-              className="w-full"
-            >
-              {isAdding ? "Adding..." : "Add Widget"}
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
-    </>
+            ))}
+          </div>
+        </ScrollArea>
+      </SheetContent>
+    </Sheet>
   );
 }
