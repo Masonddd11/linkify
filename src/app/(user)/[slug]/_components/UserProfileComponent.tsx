@@ -49,8 +49,19 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
   edit,
 }) => {
   const [rowHeight, setRowHeight] = useState<number>(150);
-  const layouts = getLayout(user.UserProfile?.widgets || [], edit);
+  const [isMobile, setIsMobile] = useState(false);
+  const layouts = getLayout(user.UserProfile?.widgets || [], edit, isMobile);
   const [currentLayout, setCurrentLayout] = useState<Layout[]>(layouts.lg);
+
+  // Update layout when mobile state changes
+  useEffect(() => {
+    const newLayouts = getLayout(
+      user.UserProfile?.widgets || [],
+      edit,
+      isMobile
+    );
+    setCurrentLayout(newLayouts.lg);
+  }, [isMobile, user.UserProfile?.widgets, edit]);
   const gridRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
 
@@ -105,29 +116,32 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
   );
 
   useEffect(() => {
-    const updateRowHeight = () => {
+    const updateLayout = () => {
       if (gridRef.current) {
         const containerWidth = gridRef.current.offsetWidth;
-        const columns = 3;
+        const newIsMobile = window.innerWidth < 768;
+        setIsMobile(newIsMobile);
+
+        const columns = newIsMobile ? 2 : 3;
 
         // Calculate available width after subtracting container padding
-        const containerPadding = 16 * 2; // 16px padding on each side
+        const containerPadding = newIsMobile ? 8 * 2 : 16 * 2; // Smaller padding on mobile
         const availableWidth = containerWidth - containerPadding;
 
         // Calculate total margin space between items
-        const marginSpace = (columns - 1) * 16; // 16px margin between items
+        const marginSpace = (columns - 1) * (newIsMobile ? 8 : 16); // Smaller margins on mobile
 
         // Calculate the width for each item
         const itemWidth = (availableWidth - marginSpace) / columns;
 
-        // Set the row height equal to the item width to make squares
+        // Set the row height equal to the item width to maintain aspect ratio
         setRowHeight(itemWidth);
       }
     };
 
-    updateRowHeight();
-    window.addEventListener("resize", updateRowHeight);
-    return () => window.removeEventListener("resize", updateRowHeight);
+    updateLayout();
+    window.addEventListener("resize", updateLayout);
+    return () => window.removeEventListener("resize", updateLayout);
   }, []);
 
   const {
@@ -258,16 +272,16 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
             <GridLayout
               className="layout max-h-screen overflow-y-auto no-scrollbar"
               layout={currentLayout}
-              cols={3}
+              cols={isMobile ? 2 : 3}
               rowHeight={rowHeight}
               width={gridRef.current?.offsetWidth || 1200}
-              margin={[16, 16]}
-              containerPadding={[16, 16]}
+              margin={isMobile ? [8, 8] : [16, 16]}
+              containerPadding={isMobile ? [8, 8] : [16, 16]}
+              compactType={isMobile ? "vertical" : null}
               isDraggable={edit}
               isResizable={false}
               useCSSTransforms={true}
               preventCollision={false}
-              compactType={null}
               onDragStart={() => {
                 isDragging.current = true;
               }}

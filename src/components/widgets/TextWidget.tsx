@@ -33,26 +33,24 @@ export function TextWidget({
     ? { color: widget.textContent.color }
     : {};
   const commonClasses =
-    "w-full text-2xl leading-normal font-[450] tracking-tight text-left";
+    "w-full text-2xl leading-normal p-4 font-[450] tracking-tight text-left break-words overflow-wrap-anywhere";
 
   return (
     <div className="w-full h-full p-2  ">
-      <div className="w-full h-full rounded-md overflow-hidden hover:bg-gray-50 ">
-        <div className="w-full h-full p-6  transition-all duration-200">
-          {edit ? (
-            <textarea
-              value={text}
-              onChange={handleChange}
-              style={textStyles}
-              className={`${commonClasses} h-full w-full no-scrollbar box-border bg-transparent resize-none outline-none border-none rounded-lg px-3`}
-              placeholder="Start typing..."
-            />
-          ) : (
-            <p className={commonClasses} style={textStyles}>
-              {text}
-            </p>
-          )}
-        </div>
+      <div className="w-full h-full  transition-all duration-200 rounded-lg overflow-hidden hover:bg-gray-50">
+        {edit ? (
+          <textarea
+            value={text}
+            onChange={handleChange}
+            style={textStyles}
+            className={`${commonClasses} h-full w-full no-scrollbar box-border bg-transparent resize-none outline-none border-none rounded-lg px-3 break-all`}
+            placeholder="Start typing..."
+          />
+        ) : (
+          <p className={`${commonClasses} `} style={textStyles}>
+            {text}
+          </p>
+        )}
       </div>
     </div>
   );

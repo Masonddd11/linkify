@@ -4,7 +4,8 @@ import { Prisma, WIDGET_SIZE } from "@prisma/client";
 // Define the layout for different breakpoints
 export const getLayout = (
   widgets: Prisma.WidgetGetPayload<{ include: { layout: true } }>[],
-  edit: boolean
+  edit: boolean,
+  isMobile: boolean = false
 ): { lg: Layout[] } => {
   const generateLayout = (columnCount: number): Layout[] => {
     // Initialize a grid to track occupied spaces
@@ -39,12 +40,40 @@ export const getLayout = (
     widgets.forEach((widget) => {
       // Use saved layout if available
       if (widget.layout) {
+        let width = widget.layout.w;
+        let height = widget.layout.h;
+
+        if (isMobile) {
+          // Adjust sizes for mobile based on widget size
+          switch (widget.size) {
+            case WIDGET_SIZE.SMALL_SQUARE:
+              width = 1; // 1x1 small square
+              height = 1;
+              break;
+            case WIDGET_SIZE.LARGE_SQUARE:
+              width = 2; // 2x2 large square
+              height = 2;
+              break;
+            case WIDGET_SIZE.WIDE:
+              width = 2; // 2x1 wide rectangle
+              height = 1;
+              break;
+            case WIDGET_SIZE.LONG:
+              width = 1; // 1x2 long rectangle
+              height = 2;
+              break;
+            default:
+              width = 1;
+              height = 1;
+          }
+        }
+
         layouts.push({
           i: widget.id,
           x: widget.layout.x,
           y: widget.layout.y,
-          w: widget.layout.w,
-          h: widget.layout.h,
+          w: width,
+          h: height,
           isDraggable: edit,
           isResizable: false,
         });
