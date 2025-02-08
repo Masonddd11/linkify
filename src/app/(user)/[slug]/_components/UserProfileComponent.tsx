@@ -1,14 +1,12 @@
 "use client";
 
 import { Prisma } from "@prisma/client";
-import { Layout } from "react-grid-layout";
 import { WidgetContent } from "@/components/widgets/WidgetContent";
 import { SocialLinkVisualizer } from "@/components/SocialLinkVisualizer";
 import { motion } from "framer-motion";
 import EditTooltip from "./EditToolTip";
 import { ProfileImageUpload } from "./ProfileImageUpload";
 import { useEffect, useRef, useState, useCallback } from "react";
-import { useDebouncedCallback } from "use-debounce";
 import { useDeleteWidget } from "@/components/widgets/_hooks/useDeleteWidget";
 import useUpdateUserInfo from "../_hooks/useUpdateUserInfo";
 import React from "react";
@@ -98,15 +96,6 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
       console.error("Error updating layout:", error);
     }
   }, [isError, error]);
-
-  const prevPositionsRef = useRef<{
-    [key: string]: {
-      x: number;
-      y: number;
-      w: number;
-      h: number;
-    };
-  }>({});
 
   useEffect(() => {
     const updateLayout = () => {
