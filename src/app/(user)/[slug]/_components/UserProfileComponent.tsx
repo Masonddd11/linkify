@@ -19,6 +19,9 @@ import { getLayout } from "@/utils/layout.helper";
 import useUpdateLayoutPositions from "../_hooks/useUpdateLayoutPositions";
 import "./UserProfileComponent.css";
 import { useRouter } from "next/navigation";
+import { WIDGET_SIZE } from "@prisma/client";
+import { useUpdateWidgetSize } from "../_hooks/useUpdateWidgetSize";
+import { toast } from "react-hot-toast";
 
 interface UserProfileComponentProps {
   user: Prisma.UserGetPayload<{
@@ -65,6 +68,8 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
   const { mutate: deleteWidget } = useDeleteWidget();
 
   const router = useRouter();
+
+  const { updateWidgetSize } = useUpdateWidgetSize();
 
   const handleDeleteWidget = useCallback(
     async (widgetId: string) => {
@@ -177,6 +182,64 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
       handleSave();
     }
   }, [displayName, bio, edit, handleSave]);
+
+  const handleResizeWidget = useCallback(
+    async (widgetId: string, newSize: WIDGET_SIZE) => {
+      try {
+        // Find the widget in the layout
+        const widgetLayout = currentLayout.find((item) => item.i === widgetId);
+        if (!widgetLayout) return;
+
+        // Update the widget's size based on the new WIDGET_SIZE
+        let newW = 1,
+          newH = 1;
+        switch (newSize) {
+          case WIDGET_SIZE.LARGE_SQUARE:
+            newW = 2;
+            newH = 2;
+            break;
+          case WIDGET_SIZE.WIDE:
+            newW = 2;
+            newH = 1;
+            break;
+          case WIDGET_SIZE.LONG:
+            newW = 1;
+            newH = 2;
+            break;
+          case WIDGET_SIZE.SMALL_SQUARE:
+          default:
+            newW = 1;
+            newH = 1;
+            break;
+        }
+
+        // Create new layout with updated size
+        const newLayout = currentLayout.map((item) => {
+          if (item.i === widgetId) {
+            return {
+              ...item,
+              w: newW,
+              h: newH,
+            };
+          }
+          return item;
+        });
+
+        // Update the layout immediately
+        updateLayout(newLayout);
+
+        // Update the size in the database
+        await updateWidgetSize(widgetId, newSize);
+
+        // Refresh the page to reflect changes
+        router.refresh();
+      } catch (error) {
+        console.error("Error resizing widget:", error);
+        toast.error("Failed to resize widget");
+      }
+    },
+    [currentLayout, updateLayout, router, updateWidgetSize]
+  );
 
   return (
     <div className="flex-col lg:flex-row flex gap-8 p-12 w-full mx-auto relative min-h-screen">
@@ -321,6 +384,7 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
                     widget={widget}
                     edit={edit}
                     onDelete={handleDeleteWidget}
+                    onResize={handleResizeWidget}
                   />
                 </div>
               ))}

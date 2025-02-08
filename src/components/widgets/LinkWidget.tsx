@@ -1,13 +1,21 @@
 import { LinkContent } from "@prisma/client";
 import Image from "next/image";
 
-export function LinkWidget({ content }: { content: LinkContent }) {
+export function LinkWidget({
+  content,
+  edit,
+}: {
+  content: LinkContent;
+  edit: boolean;
+}) {
   return (
     <a
       href={content.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="block w-full h-full p-4 hover:bg-gray-50 transition-colors"
+      className={`${
+        edit && "pointer-events-none"
+      } block w-full h-full p-4 hover:bg-gray-50 transition-colors`}
     >
       <div className="flex gap-4 h-full">
         {content.thumbnail && (

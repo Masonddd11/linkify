@@ -46,12 +46,14 @@ export function WidgetContent({
     };
   }>;
 }) {
-  const handleDeleteWidget = () => {
+  const handleDeleteWidget = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!widget.id || !onDelete) return;
     onDelete(widget.id);
   };
 
-  const handleResize = (newSize: WIDGET_SIZE) => {
+  const handleResize = (e: React.MouseEvent, newSize: WIDGET_SIZE) => {
+    e.stopPropagation();
     if (!widget.id || !onResize) return;
     onResize(widget.id, newSize);
   };
@@ -69,7 +71,8 @@ export function WidgetContent({
     return sizes.map((size) => (
       <button
         key={size}
-        onClick={() => handleResize(size)}
+        onClick={(e) => handleResize(e, size)}
+        onMouseDown={(e) => e.stopPropagation()}
         className={`${buttonClass} ${
           widget.size === size ? "bg-gray-700" : ""
         }`}
@@ -101,7 +104,7 @@ export function WidgetContent({
             return <TextWidget widget={widget} edit={edit} />;
           case WIDGET_TYPE.LINK:
             if (!widget.linkContent) return null;
-            return <LinkWidget content={widget.linkContent} />;
+            return <LinkWidget content={widget.linkContent} edit={edit} />;
           case WIDGET_TYPE.IMAGE:
             if (!widget.imageContent) return null;
             return <ImageWidget content={widget.imageContent} />;
@@ -118,22 +121,29 @@ export function WidgetContent({
       {/* Widget Controls */}
       {edit && (
         <>
-          {/* Delete button */}
+          {/* Delete button - increased z-index */}
           <button
             onClick={handleDeleteWidget}
-            className="absolute -right-2 -top-2 z-10 p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-sm border border-gray-200/50 opacity-0 group-hover:opacity-100 hover:bg-red-50 transition-all duration-200 hover:scale-110 text-gray-500 hover:text-red-500"
+            onMouseDown={(e) => e.stopPropagation()}
+            className="absolute -right-2 -top-2 z-[9999] p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-sm border border-gray-200/50 opacity-0 group-hover:opacity-100 hover:bg-red-50 transition-all duration-200 hover:scale-110 text-gray-500 hover:text-red-500"
             aria-label="Delete widget"
           >
             <FaTrash size={14} />
           </button>
-          {/* Resize tools */}
-          <div className="absolute -bottom-3 left-1/2 z-[999] transform -translate-x-1/2 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          {/* Resize tools - increased z-index */}
+          <div
+            className="absolute -bottom-3 left-1/2 z-[9999] transform -translate-x-1/2 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center bg-black rounded-full px-1 py-1">
               {renderResizeButtons()}
             </div>
           </div>
-          {/* Drag handle */}
-          <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-move">
+          {/* Drag handle - increased z-index */}
+          <div
+            className="absolute top-2 left-2 z-[9999] opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-move"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
             <MdOutlineDragIndicator size={20} className="text-gray-400" />
           </div>
         </>
