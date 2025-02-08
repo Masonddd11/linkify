@@ -113,7 +113,7 @@ export function WidgetContent({
             return <EmbedWidget content={widget.embedContent} />;
           case WIDGET_TYPE.SOCIAL:
             if (!widget.socialContent) return null;
-            return <SocialWidget content={widget.socialContent} />;
+            return <SocialWidget content={widget.socialContent} edit={edit} />;
           default:
             return null;
         }

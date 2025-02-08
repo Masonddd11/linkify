@@ -2,11 +2,31 @@
 
 import { Button } from "@/components/ui/button";
 import { Copy, Edit3 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { AddWidgetButton } from "./AddWidgetButton";
 
-export default function EditTooltip({ edit }: { edit: boolean }) {
+interface EditTooltipProps {
+  edit: boolean;
+  onSave?: () => void;
+}
+
+export default function EditTooltip({ edit, onSave }: EditTooltipProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  //when user click on edit button it goes to [slug]/edit page
+  const handleToggleEdit = () => {
+    if (edit && onSave) {
+      onSave();
+
+      const url = new URL(window.location.href);
+
+      router.push(url.pathname.split("/edit")[0]);
+    } else {
+      router.push(`${pathname}/edit?${searchParams.toString()}`);
+    }
+  };
 
   return (
     <div className="fixed bottom-2 left-1/2 -translate-x-1/2 z-50">
@@ -46,18 +66,11 @@ export default function EditTooltip({ edit }: { edit: boolean }) {
               ? "bg-primary-500 text-white hover:bg-primary-600"
               : "text-gray-600 hover:text-gray-900 hover:bg-gray-100/50"
           }`}
-          onClick={() => {
-            const url = new URL(window.location.href);
-            if (edit) {
-              router.push(url.pathname.replace("/edit", ""));
-            } else {
-              router.push(url.pathname + "/edit");
-            }
-          }}
+          onClick={handleToggleEdit}
         >
           <Edit3 className="h-4 w-4" />
           <span className="font-bold text-sm">
-            {edit ? "Done" : "Edit Profile"}
+            {edit ? "Save" : "Edit Profile"}
           </span>
         </Button>
         {/* Divider */}

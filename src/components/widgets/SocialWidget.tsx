@@ -2,7 +2,13 @@ import { SocialContent } from "@prisma/client";
 import { socialPlatformConfigs } from "@/types/social";
 import { Button } from "@/components/ui/button";
 
-export function SocialWidget({ content }: { content: SocialContent }) {
+export function SocialWidget({
+  content,
+  edit,
+}: {
+  content: SocialContent;
+  edit: boolean;
+}) {
   const platform = socialPlatformConfigs.find((p) => p.id === content.platform);
   const Icon = platform?.icon;
 
@@ -15,7 +21,9 @@ export function SocialWidget({ content }: { content: SocialContent }) {
       href={content.profileUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="w-full h-full flex flex-col items-center justify-center p-6 hover:bg-accent/50 transition-colors rounded-lg group"
+      className={`${
+        edit && "pointer-events-none"
+      } w-full h-full flex flex-col items-center justify-center p-6 hover:bg-accent/50 transition-colors rounded-lg group`}
     >
       <div className="flex flex-col items-center gap-4 w-full">
         <div
