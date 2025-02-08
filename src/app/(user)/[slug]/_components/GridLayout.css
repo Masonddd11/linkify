@@ -1,0 +1,23 @@
+/* Hide default resize handle */
+.react-grid-item > .react-resizable-handle {
+  opacity: 0 !important;
+}
+
+/* Custom resize handle styling */
+.react-grid-item.react-grid-placeholder {
+  background: #f0f0f0 !important;
+  opacity: 0.4;
+  border-radius: 1rem;
+  transition: all 200ms ease;
+}
+
+/* Transition for resize */
+.react-grid-item {
+  transition: all 200ms ease;
+  transition-property: transform, width, height;
+}
+
+/* Remove transition during drag */
+.react-grid-item.react-grid-item.react-grid-placeholder {
+  transition: none;
+}

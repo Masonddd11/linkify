@@ -36,8 +36,8 @@ export function TextWidget({
     "w-full text-2xl leading-normal p-4 font-[450] tracking-tight text-left break-words overflow-wrap-anywhere";
 
   return (
-    <div className="w-full h-full p-2  ">
-      <div className="w-full h-full  transition-all duration-200 rounded-lg overflow-hidden hover:bg-gray-50">
+    <div className="w-full h-full p-2   ">
+      <div className="w-full h-full  transition-all duration-200 rounded-lg overflow-hidden ">
         {edit ? (
           <textarea
             value={text}

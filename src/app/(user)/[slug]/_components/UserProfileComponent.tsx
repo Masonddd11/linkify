@@ -69,12 +69,12 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
   const handleDeleteWidget = useCallback(
     async (widgetId: string) => {
       if (isDeleting) return; // Prevent multiple deletions
-      
+
       try {
         setIsDeleting(true);
         // First delete the widget
         await deleteWidget(widgetId);
-        
+
         // Wait a bit before refreshing to ensure deletion is complete
         setTimeout(() => {
           router.refresh();
