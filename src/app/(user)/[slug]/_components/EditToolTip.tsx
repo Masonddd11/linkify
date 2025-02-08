@@ -7,7 +7,7 @@ import { AddWidgetButton } from "./AddWidgetButton";
 
 interface EditTooltipProps {
   edit: boolean;
-  onSave?: () => void;
+  onSave: () => void;
 }
 
 export default function EditTooltip({ edit, onSave }: EditTooltipProps) {
@@ -17,7 +17,7 @@ export default function EditTooltip({ edit, onSave }: EditTooltipProps) {
 
   //when user click on edit button it goes to [slug]/edit page
   const handleToggleEdit = () => {
-    if (edit && onSave) {
+    if (edit) {
       onSave();
 
       const url = new URL(window.location.href);

@@ -99,31 +99,14 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
     }
   }, [isError, error]);
 
-  const prevPositionsRef = useRef<{ [key: string]: { x: number; y: number } }>(
-    {}
-  );
-
-  const hasPositionChanged = useCallback((layout: Layout[]) => {
-    let changed = false;
-    layout.forEach((item) => {
-      const prev = prevPositionsRef.current[item.i];
-      if (!prev || prev.x !== item.x || prev.y !== item.y) {
-        changed = true;
-      }
-      prevPositionsRef.current[item.i] = { x: item.x, y: item.y };
-    });
-    return changed;
-  }, []);
-
-  const debouncedUpdateLayout = useDebouncedCallback(
-    (layout: Layout[]) => {
-      if (hasPositionChanged(layout)) {
-        updateLayout(layout);
-      }
-    },
-    1500,
-    { maxWait: 2000 }
-  );
+  const prevPositionsRef = useRef<{
+    [key: string]: {
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+    };
+  }>({});
 
   useEffect(() => {
     const updateLayout = () => {
@@ -186,11 +169,9 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
   const handleResizeWidget = useCallback(
     async (widgetId: string, newSize: WIDGET_SIZE) => {
       try {
-        // Find the widget in the layout
         const widgetLayout = currentLayout.find((item) => item.i === widgetId);
         if (!widgetLayout) return;
 
-        // Update the widget's size based on the new WIDGET_SIZE
         let newW = 1,
           newH = 1;
         switch (newSize) {
@@ -213,7 +194,6 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
             break;
         }
 
-        // Create new layout with updated size
         const newLayout = currentLayout.map((item) => {
           if (item.i === widgetId) {
             return {
@@ -225,13 +205,10 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
           return item;
         });
 
-        // Update the layout immediately
         updateLayout(newLayout);
 
-        // Update the size in the database
         await updateWidgetSize(widgetId, newSize);
 
-        // Refresh the page to reflect changes
         router.refresh();
       } catch (error) {
         console.error("Error resizing widget:", error);
@@ -362,7 +339,10 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
                     )
                   );
                   if (filteredLayout.length > 0) {
-                    debouncedUpdateLayout(filteredLayout);
+                    // Always update layout on drag stop
+                    updateLayout(filteredLayout);
+                    // Force a refresh to ensure UI is in sync
+                    router.refresh();
                   }
                 }
               }}
@@ -396,8 +376,13 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
       {/* Edit Tooltip and Add Widget Button */}
       {isMyLink && (
         <>
-          <div className="fixed bottom-8 right-1/2 translate-x-1/2">
-            <EditTooltip edit={edit} />
+          <div className="fixed bottom-8 right-1/2 translate-x-1/2 z-[999]">
+            <EditTooltip
+              edit={edit}
+              onSave={() =>
+                currentLayout.length > 0 && updateLayout(currentLayout)
+              }
+            />
           </div>
         </>
       )}
