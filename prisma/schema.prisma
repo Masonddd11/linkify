@@ -84,6 +84,7 @@ enum WIDGET_TYPE {
   SOCIAL
   LIST
   VIDEO
+  GITHUB
 }
 
 enum WIDGET_SIZE {
@@ -110,7 +111,6 @@ model Widget {
   socialContent SocialContent?
   listContent   ListContent?
   videoContent  VideoContent?
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -204,3 +204,5 @@ model VideoContent {
   widget   Widget    @relation(fields: [widgetId], references: [id], onDelete: Cascade)
   widgetId String    @unique
 }
+
+

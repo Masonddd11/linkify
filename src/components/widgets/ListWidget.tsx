@@ -3,7 +3,6 @@
 import { ListContent, ListItem } from "@prisma/client";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useListWidget } from "@/hooks/useListWidget";
-import { useRouter } from "next/navigation";
 
 interface ListWidgetProps {
   content: ListContent & {

@@ -9,6 +9,7 @@ import {
   ImageIcon,
   Type,
   Share2,
+  GitBranch,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +21,7 @@ import {
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useWidgets } from "../_hooks/useWidgets";
-import { LinkContent, PLATFORM, SocialContent, WIDGET_SIZE, TextContent, EmbedContent, ImageContent, ListContent, ListItem  } from "@prisma/client";
+import { LinkContent, PLATFORM, SocialContent, WIDGET_SIZE, TextContent, EmbedContent, ImageContent, ListItem, ListContent } from "@prisma/client";
 import { WIDGET_TYPE } from "@prisma/client";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
@@ -44,7 +45,12 @@ const WIDGET_CATEGORIES = [
         type: WIDGET_TYPE.LINK,
         color: "bg-blue-100",
       },
-      { icon: List, label: "List", type: WIDGET_TYPE.LIST, color: "bg-blue-100" },
+      { 
+        icon: List, 
+        label: "List", 
+        type: WIDGET_TYPE.LIST, 
+        color: "bg-blue-100" 
+      },
       {
         icon: ImageIcon,
         label: "Image",
@@ -61,9 +67,15 @@ const WIDGET_CATEGORIES = [
         label: "Social profile",
         type: WIDGET_TYPE.SOCIAL,
         color: "bg-purple-100",
-      }, 
+      },
+      {
+        icon: GitBranch,
+        label: "GitHub",
+        type: WIDGET_TYPE.GITHUB,
+        color: "bg-gray-100",
+      },
     ],
-  }
+  },
 ];
 
 export function AddWidgetButton() {
@@ -118,9 +130,11 @@ export function AddWidgetButton() {
           items: ListItem[];
         };
         break;
-
+      case WIDGET_TYPE.GITHUB:
+        widgetContent = null;
+        widgetType = WIDGET_TYPE.GITHUB;
+        break;
       default:
-        // Handle unknown widget type
         widgetContent = { text: "" } as TextContent;
         widgetType = WIDGET_TYPE.TEXT;
         break;
@@ -222,7 +236,7 @@ export function AddWidgetButton() {
                     {category.title}
                   </h3>
                   <div className="space-y-1">
-                    {category.items.map((item) => (
+                    {category?.items?.map((item) => (
                       <button
                         key={item.type}
                         onClick={() => handleSelectWidget(item.type)}

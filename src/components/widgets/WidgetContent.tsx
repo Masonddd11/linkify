@@ -10,6 +10,7 @@ import { ListWidget } from "./ListWidget";
 import { WidgetTypeInclude } from "@/lib/user";
 import { ListWidgetDialog } from "./ListWidgetDialog";
 import { useState } from "react";
+import { GithubWidget } from "./GithubWidget";
 
 interface WidgetContentProps {
   edit: boolean;
@@ -131,6 +132,8 @@ export function WidgetContent({
           case WIDGET_TYPE.SOCIAL:
             if (!widget.socialContent) return null;
             return <SocialWidget content={widget.socialContent} edit={edit} />;
+          case WIDGET_TYPE.GITHUB:
+            return <GithubWidget content={widget} edit={edit} />;
           default:
             return null;
         }

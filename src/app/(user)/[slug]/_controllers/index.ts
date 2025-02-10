@@ -75,7 +75,7 @@ export async function updateUserInfo(request: NextRequest) {
 const widgetSchema = z.object({
   type: z.nativeEnum(WIDGET_TYPE),
   size: z.nativeEnum(WIDGET_SIZE),
-  content: z.record(z.any()),
+  content: z.record(z.any()).nullable(),
 });
 
 export async function addWidget(request: NextRequest) {
@@ -157,8 +157,8 @@ export async function addWidget(request: NextRequest) {
         ...(type === WIDGET_TYPE.EMBED && {
           embedContent: {
             create: {
-              embedUrl: content.embedUrl,
-              type: content.type.toUpperCase() as EmbedType,
+              embedUrl: content?.embedUrl,
+              type: content?.type.toUpperCase() as EmbedType,
             },
           },
         }),
@@ -175,7 +175,7 @@ export async function addWidget(request: NextRequest) {
           listContent: {
             create: {
               items: {
-                create: content.items.map((item: ListItem) => ({
+                create: content?.items.map((item: ListItem) => ({
                   content: item.content,
                   isCompleted: item.isCompleted,
                   order: item.order,

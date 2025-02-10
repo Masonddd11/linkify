@@ -197,7 +197,7 @@ export async function getProfileAndSocialsAndWidgetsBySlug(slug: string) {
                   items: true
                 }
               },
-              layout: true
+              layout: true,
             }
           }
         }
