@@ -1,5 +1,5 @@
 import { prisma } from "./db";
-import type { User, UserProfile } from "@prisma/client";
+import type { User, UserProfile, Prisma } from "@prisma/client";
 
 interface CreateUserInput {
   email: string;
@@ -10,7 +10,7 @@ interface CreateUserInput {
 }
 
 interface FindOrCreateGoogleUserInput {
-  googleId: string;
+  googleId: string; 
   email: string;
   username: string;
   image?: string;
@@ -157,6 +157,23 @@ export function getProfileAndSocialsById(id: number) {
   });
 }
 
+export type ProfileAndSocialsAndWidgets = Awaited<ReturnType<typeof getProfileAndSocialsAndWidgetsBySlug>>;
+
+export type WidgetTypeInclude = Prisma.WidgetGetPayload<{
+  include: {
+    textContent: true;
+    linkContent: true;
+    imageContent: true;
+    embedContent: true;
+    socialContent: true;
+    listContent: {
+      include: {
+        items: true;
+      };
+    };
+  };
+}>
+
 export async function getProfileAndSocialsAndWidgetsBySlug(slug: string) {
   return prisma.user.findFirst({
     where: {
@@ -175,6 +192,11 @@ export async function getProfileAndSocialsAndWidgetsBySlug(slug: string) {
               imageContent: true,
               embedContent: true,
               socialContent: true,
+              listContent: {
+                include: {
+                  items: true,
+                },
+              },
               layout: true,
             },
           },

@@ -3,32 +3,18 @@ import { LinkWidget } from "./LinkWidget";
 import { ImageWidget } from "./ImageWidget";
 import { EmbedWidget } from "./EmbedWidget";
 import { SocialWidget } from "./SocialWidget";
-import { type Prisma, WIDGET_TYPE, WIDGET_SIZE } from "@prisma/client";
+import {  WIDGET_TYPE, WIDGET_SIZE } from "@prisma/client";
 import { FaTrash, FaPencilAlt } from "react-icons/fa";
 import { MdOutlineDragIndicator } from "react-icons/md";
+import { ListWidget } from "./ListWidget";
+import { WidgetTypeInclude } from "@/lib/user";
 
 interface WidgetContentProps {
   edit: boolean;
   onDelete?: (widgetId: string) => void;
   onResize?: (widgetId: string, newSize: WIDGET_SIZE) => void;
-  onOpenImageDialog?: (widget: Prisma.WidgetGetPayload<{
-    include: {
-      textContent: true;
-      linkContent: true;
-      imageContent: true;
-      embedContent: true;
-      socialContent: true;
-    };
-  }>) => void;
-  widget: Prisma.WidgetGetPayload<{
-    include: {
-      textContent: true;
-      linkContent: true;
-      imageContent: true;
-      embedContent: true;
-      socialContent: true;
-    };
-  }>;
+  onOpenImageDialog?: (widget: WidgetTypeInclude) => void;
+  widget: WidgetTypeInclude;
   size: WIDGET_SIZE;
 }
 
@@ -133,6 +119,9 @@ export function WidgetContent({
                 edit={edit}
               />
             );
+          case WIDGET_TYPE.LIST:
+            if (!widget.listContent) return null;
+            return <ListWidget content={widget.listContent} edit={edit} />;
           case WIDGET_TYPE.EMBED:
             if (!widget.embedContent) return null;
             return <EmbedWidget content={widget.embedContent} />;

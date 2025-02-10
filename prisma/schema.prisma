@@ -175,10 +175,24 @@ model WidgetLayout {
 }
 
 model ListContent {
-  id       String   @id @default(cuid())
-  items    String[] // Array of list items
-  widget   Widget   @relation(fields: [widgetId], references: [id], onDelete: Cascade)
-  widgetId String   @unique
+  id       String     @id @default(cuid())
+  items    ListItem[]
+  widget   Widget     @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+  widgetId String     @unique
+}
+
+model ListItem {
+  id          String      @id @default(cuid())
+  content     String
+  isCompleted Boolean     @default(false)
+  order       Int
+  list        ListContent @relation(fields: [listId], references: [id], onDelete: Cascade)
+  listId      String
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([listId])
 }
 
 model VideoContent {

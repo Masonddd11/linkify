@@ -1,6 +1,5 @@
 "use client";
 
-import { Prisma } from "@prisma/client";
 import { WidgetContent } from "@/components/widgets/WidgetContent";
 import { SocialLinkVisualizer } from "@/components/SocialLinkVisualizer";
 import { motion } from "framer-motion";
@@ -21,27 +20,9 @@ import { WIDGET_SIZE } from "@prisma/client";
 import { useUpdateWidgetSize } from "../_hooks/useUpdateWidgetSize";
 import { toast } from "react-hot-toast";
 import { ImageWidgetDialog } from "@/components/widgets/ImageWidgetDialog";
-
+import { ProfileAndSocialsAndWidgets, WidgetTypeInclude } from "@/lib/user";
 interface UserProfileComponentProps {
-  user: Prisma.UserGetPayload<{
-    include: {
-      UserProfile: {
-        include: {
-          socialLinks: true;
-          widgets: {
-            include: {
-              textContent: true;
-              linkContent: true;
-              imageContent: true;
-              embedContent: true;
-              socialContent: true;
-              layout: true;
-            };
-          };
-        };
-      };
-    };
-  }>;
+  user : ProfileAndSocialsAndWidgets;
   isMyLink: boolean;
   edit: boolean;
 }
@@ -56,7 +37,7 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
   const [isDeleting, setIsDeleting] = useState(false);
   // Generate layout based on current widgets and mobile state
   const currentLayout = getLayout(
-    user.UserProfile?.widgets || [],
+    user?.UserProfile?.widgets || [],
     edit,
     isMobile
   ).lg;
@@ -71,15 +52,7 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
   const { updateWidgetSize } = useUpdateWidgetSize();
 
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
-  const [selectedWidget, setSelectedWidget] = useState<Prisma.WidgetGetPayload<{
-    include: {
-      textContent: true;
-      linkContent: true;
-      imageContent: true;
-      embedContent: true;
-      socialContent: true;
-    };
-  }> | null>(null);
+  const [selectedWidget, setSelectedWidget] = useState<WidgetTypeInclude | null>(null);
 
   const handleDeleteWidget = useCallback(
     async (widgetId: string) => {
@@ -146,9 +119,9 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
     handleSave,
     isLoading,
   } = useUpdateUserInfo(
-    user.UserProfile?.displayName || "",
-    user.UserProfile?.bio || "",
-    user.id
+    user?.UserProfile?.displayName || "",
+    user?.UserProfile?.bio || "",
+    user?.id || 0
   );
 
   const bioTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -219,15 +192,7 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
     [currentLayout, updateLayout, router, updateWidgetSize]
   );
 
-  const handleOpenImageDialog = (widget: Prisma.WidgetGetPayload<{
-    include: {
-      textContent: true;
-      linkContent: true;
-      imageContent: true;
-      embedContent: true;
-      socialContent: true;
-    };
-  }>) => {
+  const handleOpenImageDialog = (widget: WidgetTypeInclude) => {
     setSelectedWidget(widget);
     setImageDialogOpen(true);
   };
@@ -269,7 +234,7 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
             transition={{ delay: 0.2, duration: 0.5 }}
             className="flex flex-col items-center space-y-4"
           >
-            <ProfileImageUpload currentImage={user.image} edit={edit} />
+            <ProfileImageUpload currentImage={user?.image || null} edit={edit} />
           </motion.div>
 
           {/* Display Name */}
@@ -290,7 +255,7 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
               </>
             ) : (
               <h1 className="text-4xl font-bold text-center lg:text-left text-gray-800 break-words">
-                {user.UserProfile?.displayName}
+                {user?.UserProfile?.displayName}
               </h1>
             )}
           </motion.div>
@@ -316,20 +281,20 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
               </>
             ) : (
               <p className="text-gray-600 whitespace-pre-wrap break-words text-center lg:text-left">
-                {user.UserProfile?.bio || "This user has not set a bio yet."}
+                {user?.UserProfile?.bio || "This user has not set a bio yet."}
               </p>
             )}
           </motion.div>
 
           {/* Social Links */}
-          {user.UserProfile?.socialLinks && (
+          {user?.UserProfile?.socialLinks && (
             <motion.div
               initial={edit ? false : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8, duration: 0.5 }}
             >
               <SocialLinkVisualizer
-                socialLinks={user.UserProfile.socialLinks}
+                socialLinks={user?.UserProfile?.socialLinks || []}
               />
             </motion.div>
           )}
@@ -368,7 +333,7 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
                 if (edit && !isDeleting && isDragging.current) {
                   isDragging.current = false;
                   const filteredLayout = layout.filter((item) =>
-                    user.UserProfile?.widgets?.some(
+                    user?.UserProfile?.widgets?.some(
                       (widget) => widget.id === item.i
                     )
                   );
@@ -381,7 +346,7 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
                 }
               }}
             >
-              {user.UserProfile?.widgets?.map((widget) => (
+              {user?.UserProfile?.widgets?.map((widget) => (
                 <div
                   key={widget.id}
                   className={`
