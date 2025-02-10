@@ -7,6 +7,22 @@ import { type Prisma, WIDGET_TYPE, WIDGET_SIZE } from "@prisma/client";
 import { FaTrash } from "react-icons/fa";
 import { MdOutlineDragIndicator } from "react-icons/md";
 
+interface WidgetContentProps {
+  edit: boolean;
+  onDelete?: (widgetId: string) => void;
+  onResize?: (widgetId: string, newSize: WIDGET_SIZE) => void;
+  widget: Prisma.WidgetGetPayload<{
+    include: {
+      textContent: true;
+      linkContent: true;
+      imageContent: true;
+      embedContent: true;
+      socialContent: true;
+    };
+  }>;
+  size: WIDGET_SIZE;
+}
+
 const ResizeIcon = ({ type }: { type: WIDGET_SIZE }) => (
   <svg
     width="20"
@@ -32,20 +48,8 @@ export function WidgetContent({
   edit,
   onDelete,
   onResize,
-}: {
-  edit: boolean;
-  onDelete?: (widgetId: string) => void;
-  onResize?: (widgetId: string, newSize: WIDGET_SIZE) => void;
-  widget: Prisma.WidgetGetPayload<{
-    include: {
-      textContent: true;
-      linkContent: true;
-      imageContent: true;
-      embedContent: true;
-      socialContent: true;
-    };
-  }>;
-}) {
+  size,
+}: WidgetContentProps) {
   const handleDeleteWidget = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!widget.id || !onDelete) return;
@@ -104,7 +108,13 @@ export function WidgetContent({
             return <TextWidget widget={widget} edit={edit} />;
           case WIDGET_TYPE.LINK:
             if (!widget.linkContent) return null;
-            return <LinkWidget content={widget.linkContent} edit={edit} />;
+            return (
+              <LinkWidget
+                content={widget.linkContent}
+                edit={edit}
+                size={size}
+              />
+            );
           case WIDGET_TYPE.IMAGE:
             if (!widget.imageContent) return null;
             return <ImageWidget content={widget.imageContent} />;

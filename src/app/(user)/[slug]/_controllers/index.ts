@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentSession } from "@/lib/session";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import * as cheerio from "cheerio";
 
 export async function updateUserInfo(request: NextRequest) {
   const session = await getCurrentSession();
@@ -462,6 +463,40 @@ export async function updateWidgetSize(
     console.error("Error updating widget size:", error);
     return NextResponse.json(
       { error: "Failed to update widget size" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function getMetadata(request: Request) {
+  const url = new URL(request.url).searchParams.get("url");
+
+  if (!url) {
+    return NextResponse.json({ error: "URL is required" }, { status: 400 });
+  }
+
+  try {
+    const response = await fetch(url);
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    const metadata = {
+      title:
+        $('meta[property="og:title"]').attr("content") ||
+        $("title").text() ||
+        "",
+      description:
+        $('meta[property="og:description"]').attr("content") ||
+        $('meta[name="description"]').attr("content") ||
+        "",
+      image: $('meta[property="og:image"]').attr("content") || "",
+    };
+
+    return NextResponse.json(metadata);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error: unknown) {
+    return NextResponse.json(
+      { error: "Failed to fetch metadata" },
       { status: 500 }
     );
   }

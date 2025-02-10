@@ -354,6 +354,7 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
                     edit={edit}
                     onDelete={handleDeleteWidget}
                     onResize={handleResizeWidget}
+                    size={widget.size}
                   />
                 </div>
               ))}
