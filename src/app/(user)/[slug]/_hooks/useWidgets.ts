@@ -1,19 +1,18 @@
 "use client";
 
-import { WIDGET_SIZE } from "@prisma/client";
+import { WIDGET_SIZE, WIDGET_TYPE, TextContent, LinkContent, ImageContent, EmbedContent, SocialContent } from "@prisma/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { WidgetType, WidgetContent } from "@/types/widget";
 
 interface AddWidgetParams {
-  type: WidgetType;
+  type: WIDGET_TYPE;
   size: WIDGET_SIZE;
-  content: WidgetContent;
+  content: TextContent | LinkContent | ImageContent | EmbedContent | SocialContent;
 }
 
 interface WidgetResponse {
   id: string;
-  type: WidgetType;
+  type: WIDGET_TYPE;
   size: WIDGET_SIZE;
   textContent: {
     id: string;

@@ -22,20 +22,13 @@ import {
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useWidgets } from "../_hooks/useWidgets";
-import { PLATFORM, WIDGET_SIZE } from "@prisma/client";
-import {
-  WidgetType,
-  type TextContent,
-  type LinkContent,
-  type ImageContent,
-  type EmbedContent,
-  type SocialContent,
-  type WidgetContent,
-} from "@/types/widget";
+import { LinkContent, PLATFORM, SocialContent, WIDGET_SIZE, TextContent, EmbedContent, ImageContent } from "@prisma/client";
+import { WIDGET_TYPE } from "@prisma/client";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { SocialWidgetDialog } from "@/components/widgets/SocialWidgetDialog";
 import { LinkWidgetDialog } from "@/components/widgets/LinkWidgetDialog";
+import { EmbedType } from "@prisma/client";
 
 const WIDGET_CATEGORIES = [
   {
@@ -44,27 +37,27 @@ const WIDGET_CATEGORIES = [
       {
         icon: Type,
         label: "Text",
-        type: WidgetType.TEXT,
+        type: WIDGET_TYPE.TEXT,
         color: "bg-blue-100",
       },
       {
         icon: Link,
         label: "Link",
-        type: WidgetType.LINK,
+        type: WIDGET_TYPE.LINK,
         color: "bg-blue-100",
       },
-      { icon: List, label: "List", type: "LIST", color: "bg-blue-100" },
-      { icon: Video, label: "Video", type: "VIDEO", color: "bg-blue-100" },
-      {
-        icon: MonitorPlay,
-        label: "Custom content",
-        type: "CUSTOM",
-        color: "bg-blue-100",
-      },
+      { icon: List, label: "List", type: WIDGET_TYPE.LIST, color: "bg-blue-100" },
+      { icon: Video, label: "Video", type: WIDGET_TYPE.VIDEO, color: "bg-blue-100" },
+      // {
+      //   icon: MonitorPlay,
+      //   label: "Custom content",
+      //   type: "CUSTOM",
+      //   color: "bg-blue-100",
+      // },
       {
         icon: ImageIcon,
         label: "Image",
-        type: WidgetType.IMAGE,
+        type: WIDGET_TYPE.IMAGE,
         color: "bg-blue-100",
       },
     ],
@@ -72,63 +65,53 @@ const WIDGET_CATEGORIES = [
   {
     title: "Promote",
     items: [
-      { icon: Plus, label: "Product", type: "PRODUCT", color: "bg-purple-100" },
-      {
-        icon: Plus,
-        label: "Booking service",
-        type: "BOOKING",
-        color: "bg-purple-100",
-      },
-      { icon: Plus, label: "Blog post", type: "BLOG", color: "bg-purple-100" },
-      { icon: Plus, label: "Event", type: "EVENT", color: "bg-purple-100" },
+      // { icon: Plus, label: "Product", type: "PRODUCT", color: "bg-purple-100" },
+      // {
+      //   icon: Plus,
+      //   label: "Booking service",
+      //   type: "BOOKING",
+      //   color: "bg-purple-100",
+      // },
+      // { icon: Plus, label: "Blog post", type: "BLOG", color: "bg-purple-100" },
+      // { icon: Plus, label: "Event", type: "EVENT", color: "bg-purple-100" },
       {
         icon: Share2,
         label: "Social profile",
-        type: WidgetType.SOCIAL,
+        type: WIDGET_TYPE.SOCIAL,
         color: "bg-purple-100",
-      },
-    ],
-  },
-  {
-    title: "Collect leads",
-    items: [
-      {
-        icon: Plus,
-        label: "Contact form",
-        type: "CONTACT_FORM",
-        color: "bg-orange-100",
-      },
-      {
-        icon: Plus,
-        label: "Contact card",
-        type: "CONTACT_CARD",
-        color: "bg-orange-100",
-      },
-      {
-        icon: Plus,
-        label: "Contact button",
-        type: "CONTACT_BUTTON",
-        color: "bg-orange-100",
-      },
-      {
-        icon: Plus,
-        label: "Scheduling",
-        type: "SCHEDULING",
-        color: "bg-orange-100",
-      },
+      }, 
     ],
   },
   // {
-  //   title: "Integrate",
+  //   title: "Collect leads",
   //   items: [
-  //     { icon: Plus, label: "YouTube", type: "YOUTUBE", color: "bg-gray-100" },
-  //     { icon: Plus, label: "X", type: "TWITTER", color: "bg-gray-100" },
-  //     { icon: Plus, label: "TikTok", type: "TIKTOK", color: "bg-gray-100" },
-  //     { icon: Plus, label: "Facebook", type: "FACEBOOK", color: "bg-gray-100" },
-  //     { icon: Plus, label: "Twitch", type: "TWITCH", color: "bg-gray-100" },
-  //     { icon: Plus, label: "Spotify", type: "SPOTIFY", color: "bg-gray-100" },
+  //     {
+  //       icon: Plus,
+  //       label: "Contact form",
+  //       type: "CONTACT_FORM",
+  //       color: "bg-orange-100",
+  //     },
+  //     {
+  //       icon: Plus,
+  //       label: "Contact card",
+  //       type: "CONTACT_CARD",
+  //       color: "bg-orange-100",
+  //     },
+  //     {
+  //       icon: Plus,
+  //       label: "Contact button",
+  //       type: "CONTACT_BUTTON",
+  //       color: "bg-orange-100",
+  //     },
+  //     {
+  //       icon: Plus,
+  //       label: "Scheduling",
+  //       type: "SCHEDULING",
+  //       color: "bg-orange-100",
+  //     },
   //   ],
   // },
+
 ];
 
 export function AddWidgetButton() {
@@ -139,33 +122,33 @@ export function AddWidgetButton() {
   const router = useRouter();
 
   const handleSelectWidget = (type: string) => {
-    if (type === WidgetType.LINK) {
+    if (type === WIDGET_TYPE.LINK) {
       setIsOpen(false);
       setIsLinkDialogOpen(true);
       return;
     }
 
-    if (type === WidgetType.SOCIAL) {
+    if (type === WIDGET_TYPE.SOCIAL) {
       setIsOpen(false);
       setIsSocialDialogOpen(true);
       return;
     }
 
-    let widgetContent: WidgetContent;
-    let widgetType = type as WidgetType;
+    let widgetContent;
+    let widgetType = type as WIDGET_TYPE;
 
     switch (type) {
-      case WidgetType.TEXT:
+      case WIDGET_TYPE.TEXT:
         widgetContent = { text: "" } as TextContent;
         break;
-      case WidgetType.EMBED:
-        widgetContent = { embedUrl: "", type: "other" } as EmbedContent;
+      case WIDGET_TYPE.EMBED:
+        widgetContent = { embedUrl: "", type: EmbedType.OTHER } as EmbedContent;
         break;
-      case WidgetType.IMAGE:
+      case WIDGET_TYPE.IMAGE:
         widgetContent = { url: "", alt: "" } as ImageContent;
         break;
-      case "YOUTUBE":
-        widgetType = WidgetType.SOCIAL;
+      case WIDGET_TYPE.SOCIAL:
+        widgetType = WIDGET_TYPE.SOCIAL;
         widgetContent = {
           platform: "YouTube",
           username: "",
@@ -173,7 +156,7 @@ export function AddWidgetButton() {
         } as SocialContent;
         break;
       case "TWITTER":
-        widgetType = WidgetType.SOCIAL;
+        widgetType = WIDGET_TYPE.SOCIAL;
         widgetContent = {
           platform: "Twitter",
           username: "",
@@ -181,7 +164,7 @@ export function AddWidgetButton() {
         } as SocialContent;
         break;
       case "TIKTOK":
-        widgetType = WidgetType.SOCIAL;
+        widgetType = WIDGET_TYPE.SOCIAL;
         widgetContent = {
           platform: "TikTok",
           username: "",
@@ -189,7 +172,7 @@ export function AddWidgetButton() {
         } as SocialContent;
         break;
       case "FACEBOOK":
-        widgetType = WidgetType.SOCIAL;
+        widgetType = WIDGET_TYPE.SOCIAL;
         widgetContent = {
           platform: "Facebook",
           username: "",
@@ -197,7 +180,7 @@ export function AddWidgetButton() {
         } as SocialContent;
         break;
       case "TWITCH":
-        widgetType = WidgetType.SOCIAL;
+        widgetType = WIDGET_TYPE.SOCIAL;
         widgetContent = {
           platform: "Twitch",
           username: "",
@@ -205,7 +188,7 @@ export function AddWidgetButton() {
         } as SocialContent;
         break;
       case "SPOTIFY":
-        widgetType = WidgetType.SOCIAL;
+        widgetType = WIDGET_TYPE.SOCIAL;
         widgetContent = {
           platform: "Spotify",
           username: "",
@@ -215,7 +198,7 @@ export function AddWidgetButton() {
       default:
         // Handle unknown widget type
         widgetContent = { text: "" } as TextContent;
-        widgetType = WidgetType.TEXT;
+        widgetType = WIDGET_TYPE.TEXT;
         break;
     }
 
@@ -241,7 +224,7 @@ export function AddWidgetButton() {
   const handleLinkSubmit = (data: { url: string; title: string }) => {
     addWidget(
       {
-        type: WidgetType.LINK,
+        type: WIDGET_TYPE.LINK,
         size: WIDGET_SIZE.SMALL_SQUARE,
         content: {
           url: data.url,
@@ -264,7 +247,7 @@ export function AddWidgetButton() {
   const handleSocialSubmit = (data: { platform: PLATFORM; url: string }) => {
     addWidget(
       {
-        type: WidgetType.SOCIAL,
+        type: WIDGET_TYPE.SOCIAL,
         size: WIDGET_SIZE.SMALL_SQUARE,
         content: {
           platform: data.platform,

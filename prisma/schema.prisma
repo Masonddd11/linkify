@@ -82,6 +82,8 @@ enum WIDGET_TYPE {
   IMAGE
   EMBED
   SOCIAL
+  LIST
+  VIDEO
 }
 
 enum WIDGET_SIZE {
@@ -91,38 +93,6 @@ enum WIDGET_SIZE {
   LONG
 }
 
-/// JSON schema for TEXT widget content:
-/// {
-///   text: string
-///   color?: string
-/// }
-///
-/// JSON schema for LINK widget content:
-/// {
-///   url: string
-///   title: string
-///   description?: string
-///   thumbnail?: string
-/// }
-///
-/// JSON schema for IMAGE widget content:
-/// {
-///   url: string
-///   alt?: string
-/// }
-///
-/// JSON schema for EMBED widget content:
-/// {
-///   embedUrl: string
-///   type: "youtube" | "spotify" | "other"
-/// }
-///
-/// JSON schema for SOCIAL widget content:
-/// {
-///   platform: string
-///   username: string
-///   profileUrl: string
-/// }
 model Widget {
   id        String      @id @default(cuid())
   type      WIDGET_TYPE
@@ -138,6 +108,8 @@ model Widget {
   imageContent  ImageContent?
   embedContent  EmbedContent?
   socialContent SocialContent?
+  listContent   ListContent?
+  videoContent  VideoContent?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -200,4 +172,21 @@ model WidgetLayout {
   h        Int
   widget   Widget  @relation(fields: [widgetId], references: [id], onDelete: Cascade)
   widgetId String  @unique
+}
+
+model ListContent {
+  id       String   @id @default(cuid())
+  items    String[] // Array of list items
+  widget   Widget   @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+  widgetId String   @unique
+}
+
+model VideoContent {
+  id       String    @id @default(cuid())
+  url      String    // Video URL
+  provider String    // e.g., "youtube", "vimeo"
+  videoId  String    // ID of the video on the provider's platform
+  title    String?   // Optional video title
+  widget   Widget    @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+  widgetId String    @unique
 }

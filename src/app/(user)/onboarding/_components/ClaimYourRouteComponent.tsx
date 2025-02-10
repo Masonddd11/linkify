@@ -119,7 +119,7 @@ export function ClaimYourRouteComponent({
       </div>
 
       {/* Right Side - Browser Preview */}
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden hidden lg:block">
         {/* Browser Chrome */}
         <div className="bg-gray-100 border-b border-gray-200 p-4">
           {/* Browser Controls */}
