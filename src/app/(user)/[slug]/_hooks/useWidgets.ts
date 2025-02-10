@@ -14,38 +14,11 @@ interface WidgetResponse {
   id: string;
   type: WIDGET_TYPE;
   size: WIDGET_SIZE;
-  textContent: {
-    id: string;
-    text: string;
-    color: string | null;
-    widgetId: string;
-  } | null;
-  linkContent: {
-    id: string;
-    title: string;
-    url: string;
-    widgetId: string;
-    description: string | null;
-    thumbnail: string | null;
-  } | null;
-  imageContent: {
-    id: string;
-    url: string;
-    alt: string | null;
-    widgetId: string;
-  } | null;
-  embedContent: {
-    id: string;
-    embedUrl: string;
-    type: string;
-    widgetId: string;
-  } | null;
-  socialContent: {
-    id: string;
-    platform: string;
-    username: string;
-    widgetId: string;
-  } | null;
+  textContent: TextContent | null;
+  linkContent: LinkContent | null;
+  imageContent: ImageContent | null;
+  embedContent: EmbedContent | null;
+  socialContent: SocialContent | null;
 }
 
 export function useWidgets() {
