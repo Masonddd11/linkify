@@ -121,7 +121,7 @@ export async function sanitizeUsername(username: string): Promise<string> {
 }
 
 export function isValidUsername(username: string): boolean {
-  return /^[a-z0-9_]+$/.test(username);
+  return /^[a-zA-z0-9_]+$/.test(username);
 }
 
 export function getUserById(
@@ -182,4 +182,27 @@ export async function getProfileAndSocialsAndWidgetsBySlug(slug: string) {
       },
     },
   });
+}
+
+export async function verifyWidgetOwnership(widgetId: string, userId: number) {
+  const widget = await prisma.widget.findUnique({
+    where: { id: widgetId },
+    include: {
+      profile: true,
+    },
+  });
+
+  if (!widget) {
+    return false;
+  }
+
+  return widget.profile.userId === userId;
+}
+
+export function verifyMultipleWidgetsOwnership(
+  userWidgets: string[],
+  layoutWidgets: string[]
+): boolean {
+  const userWidgetIds = new Set(userWidgets);
+  return layoutWidgets.every((id) => userWidgetIds.has(id));
 }
