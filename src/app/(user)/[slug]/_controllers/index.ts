@@ -3,7 +3,7 @@ import { getCurrentSession } from "@/lib/session";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import * as cheerio from "cheerio";
-import { WIDGET_SIZE, WIDGET_TYPE, EmbedType, ListItem } from "@prisma/client";
+import { WIDGET_SIZE, WIDGET_TYPE, EmbedType, ListItem, SocialLink } from "@prisma/client";
 import { uploadImage } from "@/lib/cloudinary";
 import { verifyWidgetOwnership } from "@/lib/user";
 
@@ -751,5 +751,71 @@ export async function deleteListItem(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     return new NextResponse("Internal Error", { status: 500 });
+  }
+} 
+
+export async function getGithubContributions(
+  req: Request,
+  { params }: { params: { profileId: string } }
+) {
+  const { profileId } = await params;
+
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: parseInt(profileId),
+    },
+    include: {
+      UserProfile: {
+        include: {
+          socialLinks: true,
+        },
+      },
+    },
+  });
+
+  const githubUrl = user?.UserProfile?.socialLinks.find(
+    (link: SocialLink) => link.platform === "GITHUB"
+  )?.url;
+
+  if (!githubUrl) {
+    return NextResponse.json({ 
+      username: null,
+      total: {},
+      contributions: []
+    }, { status: 404 });
+  }
+
+  const username = githubUrl.split("https://github.com/")[1];
+  if (!username) {
+    return NextResponse.json({ 
+      username: null,
+      total: {},
+      contributions: []
+    }, { status: 404 });
+  }
+
+  try {
+    const response = await fetch(
+      `https://github-contributions-api.jogruber.de/v4/${username}`
+    );
+    
+    if (!response.ok) {
+      throw new Error("Failed to fetch GitHub contributions");
+    }
+
+    const data = await response.json();
+    return NextResponse.json({
+      username,
+      total: data.total,
+      contributions: data.contributions,
+    });
+  } catch (error) {
+    console.error('GitHub API Error:', error);
+    return NextResponse.json({ 
+      username: null,
+      total: {},
+      contributions: []
+    }, { status: 500 });
   }
 } 
