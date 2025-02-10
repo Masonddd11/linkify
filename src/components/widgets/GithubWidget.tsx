@@ -3,6 +3,7 @@
 import { Widget } from "@prisma/client";
 import { GitCommit } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { GithubCalendar } from "./github/GithubCalendar";
 
 interface GithubWidgetProps {
   content: Widget;
@@ -44,18 +45,14 @@ export function GithubWidget({ content }: GithubWidgetProps) {
         href={`https://github.com/${githubUsername}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex flex-col gap-2 hover:opacity-80 transition-opacity"
+        className="flex flex-col gap-2"
       >
         <div className="flex items-center gap-2 text-gray-700">
           <GitCommit className="w-4 h-4" />
           <span className="font-medium">{githubUsername}</span>
         </div>
-        <img 
-          src={`https://ghchart.rshah.org/${githubUsername}`}
-          alt="GitHub Contribution Graph"
-          className="w-full rounded-lg"
-        />
       </a>
+      <GithubCalendar username={githubUsername} size={content.size} />
     </div>
   );
 } 

@@ -449,7 +449,7 @@ export async function updateWidgetSize(
   { params }: { params: { widgetId: string } }
 ) {
   try {
-    const { widgetId } = params;
+    const { widgetId } = await params;
     const { size } = await req.json();
 
     const widget = await prisma.widget.update({

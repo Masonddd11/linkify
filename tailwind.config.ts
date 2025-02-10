@@ -9,6 +9,11 @@ export default {
   ],
   theme: {
     extend: {
+      gridTemplateColumns: {
+        '12': 'repeat(12, minmax(0, 1fr))',
+        '15': 'repeat(15, minmax(0, 1fr))',
+        '25': 'repeat(25, minmax(0, 1fr))',
+      },
       fontFamily: {
         poppins: ["var(--font-poppins)"],
       },
