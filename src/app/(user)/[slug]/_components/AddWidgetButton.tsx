@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useWidgets } from "../_hooks/useWidgets";
-import { LinkContent, PLATFORM, SocialContent, WIDGET_SIZE, TextContent, EmbedContent, ImageContent, ListContent,  } from "@prisma/client";
+import { LinkContent, PLATFORM, SocialContent, WIDGET_SIZE, TextContent, EmbedContent, ImageContent, ListContent, ListItem  } from "@prisma/client";
 import { WIDGET_TYPE } from "@prisma/client";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
@@ -162,41 +162,18 @@ export function AddWidgetButton() {
           profileUrl: "",
         } as SocialContent;
         break;
-      case "TIKTOK":
-        widgetType = WIDGET_TYPE.SOCIAL;
-        widgetContent = {
-          platform: "TikTok",
-          username: "",
-          profileUrl: "",
-        } as SocialContent;
-        break;
-      case "FACEBOOK":
-        widgetType = WIDGET_TYPE.SOCIAL;
-        widgetContent = {
-          platform: "Facebook",
-          username: "",
-          profileUrl: "",
-        } as SocialContent;
-        break;
-      case "TWITCH":
-        widgetType = WIDGET_TYPE.SOCIAL;
-        widgetContent = {
-          platform: "Twitch",
-          username: "",
-          profileUrl: "",
-        } as SocialContent;
-        break;
-      case "SPOTIFY":
-        widgetType = WIDGET_TYPE.SOCIAL;
-        widgetContent = {
-          platform: "Spotify",
-          username: "",
-          profileUrl: "",
-        } as SocialContent;
-        break;
       case WIDGET_TYPE.LIST:
-        widgetContent = {} as ListContent;
+        widgetContent = {
+          items: [{
+            content: "New item",
+            isCompleted: false,
+            order: 0
+          }]
+        } as  ListContent & {
+          items: ListItem[];
+        };
         break;
+
       default:
         // Handle unknown widget type
         widgetContent = { text: "" } as TextContent;

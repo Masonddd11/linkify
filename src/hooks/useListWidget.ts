@@ -2,6 +2,8 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
+import type { WidgetTypeInclude } from "@/lib/user";
+import { useRouter } from "next/navigation";
 
 interface AddItemData {
   content: string;
@@ -16,7 +18,7 @@ interface UpdateItemData {
 
 export function useListWidget(listId: string) {
   const queryClient = useQueryClient();
-
+  const router = useRouter();
   const addItem = useMutation({
     mutationFn: async (data: AddItemData) => {
       const response = await fetch(`/api/widgets/list/${listId}/items`, {
@@ -29,6 +31,7 @@ export function useListWidget(listId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["widgets"] });
+      router.refresh();
     },
     onError: () => {
       toast.error("Failed to add item");
@@ -36,7 +39,7 @@ export function useListWidget(listId: string) {
   });
 
   const updateItem = useMutation({
-    mutationFn: async (itemId: string, data: UpdateItemData) => {
+    mutationFn: async ({ itemId, data }: { itemId: string; data: UpdateItemData }) => {
       const response = await fetch(`/api/widgets/list/${listId}/items/${itemId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -45,11 +48,40 @@ export function useListWidget(listId: string) {
       if (!response.ok) throw new Error("Failed to update item");
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["widgets"] });
+    onMutate: async ({ itemId, data }) => {
+      await queryClient.cancelQueries({ queryKey: ["widgets"] });
+
+      const previousWidgets = queryClient.getQueryData(["widgets"]);
+
+      queryClient.setQueryData(["widgets"], (old: WidgetTypeInclude[] | undefined) => {
+        return old?.map((widget: WidgetTypeInclude) => {
+          if (widget.listContent?.items) {
+            return {
+              ...widget,
+              listContent: {
+                ...widget.listContent,
+                items: widget.listContent.items.map((item) =>
+                  item.id === itemId ? { ...item, ...data } : item
+                ),
+              },
+            };
+          }
+          return widget;
+        });
+      });
+
+      return { previousWidgets };
     },
-    onError: () => {
-      toast.error("Failed to update item");
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousWidgets) {
+        queryClient.setQueryData(["widgets"], context.previousWidgets);
+      }
+    },
+    onSettled: () => {
+      // Refetch after error or success
+      queryClient.invalidateQueries({ queryKey: ["widgets"] });
+      router.refresh();
     },
   });
 
@@ -62,6 +94,7 @@ export function useListWidget(listId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["widgets"] });
+      router.refresh();
     },
     onError: () => {
       toast.error("Failed to remove item");

@@ -8,14 +8,16 @@ import { FaTrash, FaPencilAlt } from "react-icons/fa";
 import { MdOutlineDragIndicator } from "react-icons/md";
 import { ListWidget } from "./ListWidget";
 import { WidgetTypeInclude } from "@/lib/user";
+import { ListWidgetDialog } from "./ListWidgetDialog";
+import { useState } from "react";
 
 interface WidgetContentProps {
   edit: boolean;
   onDelete?: (widgetId: string) => void;
   onResize?: (widgetId: string, newSize: WIDGET_SIZE) => void;
   onOpenImageDialog?: (widget: WidgetTypeInclude) => void;
+  onOpenListDialog?: (widget: WidgetTypeInclude) => void;
   widget: WidgetTypeInclude;
-  size: WIDGET_SIZE;
 }
 
 const ResizeIcon = ({ type }: { type: WIDGET_SIZE }) => (
@@ -44,8 +46,9 @@ export function WidgetContent({
   onDelete,
   onResize,
   onOpenImageDialog,
-  size,
 }: WidgetContentProps) {
+  const [listDialogOpen, setListDialogOpen] = useState(false);
+
   const handleDeleteWidget = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!widget.id || !onDelete) return;
@@ -108,7 +111,7 @@ export function WidgetContent({
               <LinkWidget
                 content={widget.linkContent}
                 edit={edit}
-                size={size}
+                size={widget.size}
               />
             );
           case WIDGET_TYPE.IMAGE:
@@ -160,6 +163,21 @@ export function WidgetContent({
             </button>
           )}
 
+          {/* Edit button for list widgets */}
+          {widget.type === WIDGET_TYPE.LIST && edit && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setListDialogOpen(true);
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
+              className="absolute -right-2 top-8 z-[9999] p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-sm border border-gray-200/50 opacity-0 group-hover:opacity-100 hover:bg-blue-50 transition-all duration-200 hover:scale-110 text-gray-500 hover:text-blue-500"
+              aria-label="Edit list"
+            >
+              <FaPencilAlt size={14} />
+            </button>
+          )}
+
           {/* Resize tools */}
           <div className="absolute -bottom-3 left-1/2 z-[9999] transform -translate-x-1/2 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             <div className="flex items-center bg-black rounded-full px-1 py-1">
@@ -172,6 +190,15 @@ export function WidgetContent({
             <MdOutlineDragIndicator size={20} className="text-gray-400" />
           </div>
         </>
+      )}
+
+      {/* List dialog */}
+      {widget.type === WIDGET_TYPE.LIST && widget.listContent && (
+        <ListWidgetDialog
+          isOpen={listDialogOpen}
+          onClose={() => setListDialogOpen(false)}
+          content={widget.listContent}
+        />
       )}
     </div>
   );

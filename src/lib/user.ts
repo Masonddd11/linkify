@@ -194,15 +194,15 @@ export async function getProfileAndSocialsAndWidgetsBySlug(slug: string) {
               socialContent: true,
               listContent: {
                 include: {
-                  items: true,
-                },
+                  items: true
+                }
               },
-              layout: true,
-            },
-          },
-        },
-      },
-    },
+              layout: true
+            }
+          }
+        }
+      }
+    }
   });
 }
 

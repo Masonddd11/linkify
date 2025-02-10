@@ -3,7 +3,7 @@ import { getCurrentSession } from "@/lib/session";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import * as cheerio from "cheerio";
-import { WIDGET_SIZE, WIDGET_TYPE, EmbedType } from "@prisma/client";
+import { WIDGET_SIZE, WIDGET_TYPE, EmbedType, ListItem } from "@prisma/client";
 import { uploadImage } from "@/lib/cloudinary";
 import { verifyWidgetOwnership } from "@/lib/user";
 
@@ -100,6 +100,11 @@ export async function addWidget(request: NextRequest) {
             imageContent: true,
             embedContent: true,
             socialContent: true,
+            listContent: {
+              include: {
+                items: true,
+              },
+            },
           },
         },
       },
@@ -166,6 +171,19 @@ export async function addWidget(request: NextRequest) {
             },
           },
         }),
+        ...(type === WIDGET_TYPE.LIST && {
+          listContent: {
+            create: {
+              items: {
+                create: content.items.map((item: ListItem) => ({
+                  content: item.content,
+                  isCompleted: item.isCompleted,
+                  order: item.order,
+                })),
+              },
+            },
+          },
+        }),
       },
       include: {
         textContent: true,
@@ -173,6 +191,11 @@ export async function addWidget(request: NextRequest) {
         imageContent: true,
         embedContent: true,
         socialContent: true,
+        listContent: {
+          include: {
+            items: true,
+          },
+        },
       },
     });
 
@@ -610,6 +633,123 @@ export async function uploadImageToWidget(req: Request) {
     return NextResponse.json({ url: result.secure_url });
   } catch (error) {
     console.error("[IMAGE_UPLOAD]", error);
+    return new NextResponse("Internal Error", { status: 500 });
+  }
+} 
+
+export async function createListItem(
+  req: Request,
+  { params } : { params: { listId: string } }
+) {
+  const { listId } = await params;
+
+  const { user } = await getCurrentSession();
+  if (!user) {
+    return new NextResponse("Unauthorized", { status: 401 });
+  }
+
+  const list = await prisma.listContent.findUnique({
+    where: { id: listId, widget: { profile: { userId: user.id } } },
+  });
+  if (!list) {
+    return new NextResponse("List not found", { status: 404 });
+  }
+
+  const ownership = verifyWidgetOwnership(list.widgetId, user.id);
+  if (!ownership) {
+    return new NextResponse("Unauthorized", { status: 403 });
+  }
+
+  try {
+
+    const body = await req.json();
+    const { content, order } = body;
+
+    const item = await prisma.listItem.create({
+      data: {
+        content,
+        order,
+        listId,
+      },
+    });
+
+    return NextResponse.json(item);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error) {
+    return new NextResponse("Internal Error", { status: 500 });
+  }
+} 
+
+export async function updateListItem(
+  req: Request,
+  { params }: { params: { listId: string; itemId: string } }
+) {
+  const { listId, itemId } = await params;
+
+  const { user } = await getCurrentSession();
+  if (!user) return new NextResponse("Unauthorized", { status: 401 });
+
+  //check list ownership
+  const list = await prisma.listContent.findUnique({
+    where: { id: listId, widget: { profile: { userId: user.id } } },
+  });
+  if (!list) return new NextResponse("List not found", { status: 404 });
+
+  const ownership = verifyWidgetOwnership(list.widgetId, user.id);
+  if (!ownership) return new NextResponse("Unauthorized", { status: 403 });
+
+  const item = await prisma.listItem.findUnique({
+    where: { id: itemId, listId },
+  });
+  if (!item) return new NextResponse("Item not found", { status: 404 });
+
+  try {
+
+    const body = await req.json();
+    const item = await prisma.listItem.update({
+      where: { id: itemId },
+      data: body,
+    });
+
+    return NextResponse.json(item);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error) {
+    return new NextResponse("Internal Error", { status: 500 });
+  }
+}
+
+export async function deleteListItem(
+  req: Request,
+  { params }: { params: { listId: string; itemId: string } }
+) {
+  const { listId, itemId } = await params;
+
+  const { user } = await getCurrentSession();
+  if (!user) return new NextResponse("Unauthorized", { status: 401 });
+
+  //check list ownership
+  const list = await prisma.listContent.findUnique({
+    where: { id: listId, widget: { profile: { userId: user.id } } },
+  });
+  if (!list) return new NextResponse("List not found", { status: 404 });
+
+  const ownership = verifyWidgetOwnership(list.widgetId, user.id);
+  if (!ownership) return new NextResponse("Unauthorized", { status: 403 });
+
+  const item = await prisma.listItem.findUnique({
+    where: { id: itemId, listId },
+  });
+  if (!item) return new NextResponse("Item not found", { status: 404 });
+
+  try {
+
+    await prisma.listItem.delete({
+      where: { id: itemId },
+    });
+
+    return new NextResponse(null, { status: 204 });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error) {
     return new NextResponse("Internal Error", { status: 500 });
   }
 } 
