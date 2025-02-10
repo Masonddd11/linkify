@@ -3,6 +3,9 @@ import { getCurrentSession } from "@/lib/session";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import * as cheerio from "cheerio";
+import { WIDGET_SIZE, WIDGET_TYPE, EmbedType } from "@prisma/client";
+import { uploadImage } from "@/lib/cloudinary";
+import { verifyWidgetOwnership } from "@/lib/user";
 
 export async function updateUserInfo(request: NextRequest) {
   const session = await getCurrentSession();
@@ -68,8 +71,6 @@ export async function updateUserInfo(request: NextRequest) {
     );
   }
 }
-
-import { WIDGET_SIZE, WIDGET_TYPE, EmbedType } from "@prisma/client";
 
 const widgetSchema = z.object({
   type: z.nativeEnum(WIDGET_TYPE),
@@ -501,3 +502,114 @@ export async function getMetadata(request: Request) {
     );
   }
 }
+
+export async function uploadImageToImageWidget(request: NextRequest) {
+  const { session, user } = await getCurrentSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const formData = await request.formData();
+    const file = formData.get("file") as File;
+    const buffer = await file.arrayBuffer();
+
+    const result = await uploadImage({
+      buffer: new Uint8Array(buffer),
+      userId: user.id,
+      folder: "widget_images",
+      tags: ["widget_image"],
+      transformation: [{ width: 800, crop: "limit" }],
+    });
+
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("Upload error:", error);
+    return NextResponse.json(
+      { error: "Failed to upload image" },
+      { status: 500 }
+    );
+  }
+}
+
+
+export async function updateImageWidget(
+  req: Request,
+  { params }: { params: { widgetId: string } }
+) {
+  try {
+    const { session, user } = await getCurrentSession();
+    if (!session) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const { url, alt } = await req.json();
+
+    if (!url) {
+      return new NextResponse("URL is required", { status: 400 });
+    }
+
+    //check widget ownership
+    const widget = await prisma.widget.findUnique({
+      where: { id: params.widgetId },
+      include: { profile: true },
+    });
+        
+
+    if (!widget) {
+      return new NextResponse("Widget not found", { status: 404 });
+    }
+
+    const ownership = verifyWidgetOwnership(widget.id, user.id);
+
+    if (!ownership) {
+      return new NextResponse("Unauthorized", { status: 403 });
+    }
+
+    const updatedWidget = await prisma.imageContent.update({
+      where: {
+        widgetId: params.widgetId,
+      },
+      data: {
+        url,
+        alt: alt || null,
+      },
+    });
+
+    return NextResponse.json(updatedWidget);
+  } catch (error) {
+    console.error("[WIDGET_IMAGE_UPDATE]", error);
+    return new NextResponse("Internal Error", { status: 500 });
+  }
+} 
+
+
+export async function uploadImageToWidget(req: Request) {
+  try {
+    const { user , session} = await getCurrentSession();
+    if (!session) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const formData = await req.formData();
+    const file = formData.get("file") as File;
+    
+    if (!file) {
+      return new NextResponse("No file provided", { status: 400 });
+    }
+
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    const result = await uploadImage({
+      buffer: new Uint8Array(buffer),
+      userId: user.id,
+      transformation: [{ width: 800, height: 800, crop: "limit" }],
+    });
+
+    return NextResponse.json({ url: result.secure_url });
+  } catch (error) {
+    console.error("[IMAGE_UPLOAD]", error);
+    return new NextResponse("Internal Error", { status: 500 });
+  }
+} 

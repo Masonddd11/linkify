@@ -4,13 +4,22 @@ import { ImageWidget } from "./ImageWidget";
 import { EmbedWidget } from "./EmbedWidget";
 import { SocialWidget } from "./SocialWidget";
 import { type Prisma, WIDGET_TYPE, WIDGET_SIZE } from "@prisma/client";
-import { FaTrash } from "react-icons/fa";
+import { FaTrash, FaPencilAlt } from "react-icons/fa";
 import { MdOutlineDragIndicator } from "react-icons/md";
 
 interface WidgetContentProps {
   edit: boolean;
   onDelete?: (widgetId: string) => void;
   onResize?: (widgetId: string, newSize: WIDGET_SIZE) => void;
+  onOpenImageDialog?: (widget: Prisma.WidgetGetPayload<{
+    include: {
+      textContent: true;
+      linkContent: true;
+      imageContent: true;
+      embedContent: true;
+      socialContent: true;
+    };
+  }>) => void;
   widget: Prisma.WidgetGetPayload<{
     include: {
       textContent: true;
@@ -48,6 +57,7 @@ export function WidgetContent({
   edit,
   onDelete,
   onResize,
+  onOpenImageDialog,
   size,
 }: WidgetContentProps) {
   const handleDeleteWidget = (e: React.MouseEvent) => {
@@ -117,7 +127,12 @@ export function WidgetContent({
             );
           case WIDGET_TYPE.IMAGE:
             if (!widget.imageContent) return null;
-            return <ImageWidget content={widget.imageContent} />;
+            return (
+              <ImageWidget
+                content={widget.imageContent}
+                edit={edit}
+              />
+            );
           case WIDGET_TYPE.EMBED:
             if (!widget.embedContent) return null;
             return <EmbedWidget content={widget.embedContent} />;
@@ -131,7 +146,7 @@ export function WidgetContent({
       {/* Widget Controls */}
       {edit && (
         <>
-          {/* Delete button - increased z-index */}
+          {/* Delete button */}
           <button
             onClick={handleDeleteWidget}
             onMouseDown={(e) => e.stopPropagation()}
@@ -140,20 +155,31 @@ export function WidgetContent({
           >
             <FaTrash size={14} />
           </button>
-          {/* Resize tools - increased z-index */}
-          <div
-            className="absolute -bottom-3 left-1/2 z-[9999] transform -translate-x-1/2 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-            onMouseDown={(e) => e.stopPropagation()}
-          >
+
+          {/* Edit button for image widgets */}
+          {widget.type === WIDGET_TYPE.IMAGE && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenImageDialog?.(widget);
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
+              className="absolute -right-2 top-8 z-[9999] p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-sm border border-gray-200/50 opacity-0 group-hover:opacity-100 hover:bg-blue-50 transition-all duration-200 hover:scale-110 text-gray-500 hover:text-blue-500"
+              aria-label="Edit image"
+            >
+              <FaPencilAlt size={14} />
+            </button>
+          )}
+
+          {/* Resize tools */}
+          <div className="absolute -bottom-3 left-1/2 z-[9999] transform -translate-x-1/2 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             <div className="flex items-center bg-black rounded-full px-1 py-1">
               {renderResizeButtons()}
             </div>
           </div>
-          {/* Drag handle - increased z-index */}
-          <div
-            className="absolute top-2 left-2 z-[9999] opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-move"
-            onMouseDown={(e) => e.stopPropagation()}
-          >
+
+          {/* Drag handle */}
+          <div className="absolute top-2 left-2 z-[9999] opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-move">
             <MdOutlineDragIndicator size={20} className="text-gray-400" />
           </div>
         </>

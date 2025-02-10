@@ -63,8 +63,8 @@ const WIDGET_CATEGORIES = [
       },
       {
         icon: ImageIcon,
-        label: "Media banner",
-        type: "MEDIA",
+        label: "Image",
+        type: WidgetType.IMAGE,
         color: "bg-blue-100",
       },
     ],
@@ -158,11 +158,11 @@ export function AddWidgetButton() {
       case WidgetType.TEXT:
         widgetContent = { text: "" } as TextContent;
         break;
-      case WidgetType.IMAGE:
-        widgetContent = { url: "", alt: "" } as ImageContent;
-        break;
       case WidgetType.EMBED:
         widgetContent = { embedUrl: "", type: "other" } as EmbedContent;
+        break;
+      case WidgetType.IMAGE:
+        widgetContent = { url: "", alt: "" } as ImageContent;
         break;
       case "YOUTUBE":
         widgetType = WidgetType.SOCIAL;
@@ -245,7 +245,7 @@ export function AddWidgetButton() {
         size: WIDGET_SIZE.SMALL_SQUARE,
         content: {
           url: data.url,
-          title: data.title || data.url,
+          title: data.title,
         } as LinkContent,
       },
       {

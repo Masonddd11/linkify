@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import { WIDGET_SIZE } from "@prisma/client";
 import { useUpdateWidgetSize } from "../_hooks/useUpdateWidgetSize";
 import { toast } from "react-hot-toast";
+import { ImageWidgetDialog } from "@/components/widgets/ImageWidgetDialog";
 
 interface UserProfileComponentProps {
   user: Prisma.UserGetPayload<{
@@ -68,6 +69,17 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
   const router = useRouter();
 
   const { updateWidgetSize } = useUpdateWidgetSize();
+
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [selectedWidget, setSelectedWidget] = useState<Prisma.WidgetGetPayload<{
+    include: {
+      textContent: true;
+      linkContent: true;
+      imageContent: true;
+      embedContent: true;
+      socialContent: true;
+    };
+  }> | null>(null);
 
   const handleDeleteWidget = useCallback(
     async (widgetId: string) => {
@@ -206,6 +218,39 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
     },
     [currentLayout, updateLayout, router, updateWidgetSize]
   );
+
+  const handleOpenImageDialog = (widget: Prisma.WidgetGetPayload<{
+    include: {
+      textContent: true;
+      linkContent: true;
+      imageContent: true;
+      embedContent: true;
+      socialContent: true;
+    };
+  }>) => {
+    setSelectedWidget(widget);
+    setImageDialogOpen(true);
+  };
+
+  const handleImageUpdate = async (data: { url: string; alt?: string }) => {
+    if (selectedWidget?.id) {
+      try {
+        const response = await fetch(`/api/widgets/${selectedWidget.id}/image`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+
+        if (!response.ok) throw new Error('Failed to update image');
+        
+        setImageDialogOpen(false);
+        router.refresh();
+      } catch (error) {
+        console.error("Error updating image:", error);
+        toast.error("Failed to update image");
+      }
+    }
+  };
 
   return (
     <div className="flex-col lg:flex-row flex gap-8 p-12 w-full mx-auto relative min-h-screen">
@@ -355,6 +400,7 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
                     onDelete={handleDeleteWidget}
                     onResize={handleResizeWidget}
                     size={widget.size}
+                    onOpenImageDialog={handleOpenImageDialog}
                   />
                 </div>
               ))}
@@ -376,6 +422,13 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
           </div>
         </>
       )}
+
+      <ImageWidgetDialog
+        isOpen={imageDialogOpen}
+        onClose={() => setImageDialogOpen(false)}
+        onSubmit={handleImageUpdate}
+        initialData={selectedWidget?.imageContent || undefined}
+      />
     </div>
   );
 };

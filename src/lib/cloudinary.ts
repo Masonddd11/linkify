@@ -48,4 +48,33 @@ export const uploadProfileImage = async ({
   });
 };
 
+export const uploadImage = async ({
+  buffer,
+  userId,
+  folder = "images",
+  tags = [],
+  transformation = [{ width: 400, height: 400, crop: "fill", gravity: "face" }],
+}: UploadImageOptions): Promise<{ secure_url: string }> => {
+  return new Promise((resolve, reject) => {
+    const uploadOptions = {
+      folder,
+      public_id: `user_${userId}_${Date.now()}`,
+      overwrite: true,
+      tags: ["images", `user_${userId}`, ...tags],
+      resource_type: "image" as const,
+      transformation,
+    };
+
+    cloudinary.uploader
+      .upload_stream(uploadOptions, (error, result) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(result!);
+      })
+      .end(buffer);
+  });
+};
+
 export default cloudinary;
