@@ -6,7 +6,6 @@ import {
   ChevronRight,
   Link,
   List,
-  Video,
   ImageIcon,
   Type,
   Share2,
@@ -46,13 +45,6 @@ const WIDGET_CATEGORIES = [
         color: "bg-blue-100",
       },
       { icon: List, label: "List", type: WIDGET_TYPE.LIST, color: "bg-blue-100" },
-      { icon: Video, label: "Video", type: WIDGET_TYPE.VIDEO, color: "bg-blue-100" },
-      // {
-      //   icon: MonitorPlay,
-      //   label: "Custom content",
-      //   type: "CUSTOM",
-      //   color: "bg-blue-100",
-      // },
       {
         icon: ImageIcon,
         label: "Image",
@@ -64,15 +56,6 @@ const WIDGET_CATEGORIES = [
   {
     title: "Promote",
     items: [
-      // { icon: Plus, label: "Product", type: "PRODUCT", color: "bg-purple-100" },
-      // {
-      //   icon: Plus,
-      //   label: "Booking service",
-      //   type: "BOOKING",
-      //   color: "bg-purple-100",
-      // },
-      // { icon: Plus, label: "Blog post", type: "BLOG", color: "bg-purple-100" },
-      // { icon: Plus, label: "Event", type: "EVENT", color: "bg-purple-100" },
       {
         icon: Share2,
         label: "Social profile",
@@ -80,37 +63,7 @@ const WIDGET_CATEGORIES = [
         color: "bg-purple-100",
       }, 
     ],
-  },
-  // {
-  //   title: "Collect leads",
-  //   items: [
-  //     {
-  //       icon: Plus,
-  //       label: "Contact form",
-  //       type: "CONTACT_FORM",
-  //       color: "bg-orange-100",
-  //     },
-  //     {
-  //       icon: Plus,
-  //       label: "Contact card",
-  //       type: "CONTACT_CARD",
-  //       color: "bg-orange-100",
-  //     },
-  //     {
-  //       icon: Plus,
-  //       label: "Contact button",
-  //       type: "CONTACT_BUTTON",
-  //       color: "bg-orange-100",
-  //     },
-  //     {
-  //       icon: Plus,
-  //       label: "Scheduling",
-  //       type: "SCHEDULING",
-  //       color: "bg-orange-100",
-  //     },
-  //   ],
-  // },
-
+  }
 ];
 
 export function AddWidgetButton() {
@@ -150,14 +103,6 @@ export function AddWidgetButton() {
         widgetType = WIDGET_TYPE.SOCIAL;
         widgetContent = {
           platform: "YouTube",
-          username: "",
-          profileUrl: "",
-        } as SocialContent;
-        break;
-      case "TWITTER":
-        widgetType = WIDGET_TYPE.SOCIAL;
-        widgetContent = {
-          platform: "Twitter",
           username: "",
           profileUrl: "",
         } as SocialContent;
