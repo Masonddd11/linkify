@@ -3,7 +3,7 @@ import { getCurrentSession } from "@/lib/session";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import * as cheerio from "cheerio";
-import { WIDGET_SIZE, WIDGET_TYPE, EmbedType, ListItem, SocialLink } from "@prisma/client";
+import { WIDGET_SIZE, WIDGET_TYPE, EmbedType, ListItem, SocialLink, PLATFORM } from "@prisma/client";
 import { uploadImage } from "@/lib/cloudinary";
 import { verifyWidgetOwnership } from "@/lib/user";
 
@@ -817,5 +817,71 @@ export async function getGithubContributions(
       total: {},
       contributions: []
     }, { status: 500 });
+  }
+} 
+
+export async function getUserSocialLinks() {
+  const { session, user } = await getCurrentSession();
+  if (!session) {
+    return new NextResponse("Unauthorized", { status: 401 });
+  }
+
+  try {
+    const profile = await prisma.userProfile.findFirst({
+      where: { userId: user.id },
+      include: { socialLinks: true },
+    });
+
+    return NextResponse.json(profile?.socialLinks || []);
+  } catch (error) {
+    console.error("Error fetching social links:", error);
+    return new NextResponse("Internal Server Error", { status: 500 });
+  }
+}
+
+interface SocialLinkInput {
+  links: Record<string, { url: string; handle: string }>;
+}
+
+export async function updateUserSocialLinks(req: Request) {
+  const { session, user } = await getCurrentSession();
+  if (!session) {
+    return new NextResponse("Unauthorized", { status: 401 });
+  }
+
+  try {
+    const { links } = (await req.json()) as SocialLinkInput;
+
+    const profile = await prisma.userProfile.findFirst({
+      where: { userId: user.id },
+    });
+
+    if (!profile) {
+      return new NextResponse("Profile not found", { status: 404 });
+    }
+
+    // Delete existing links
+    await prisma.socialLink.deleteMany({
+      where: { profileId: profile.id },
+    });
+
+    // Create new links
+    const socialLinks = await Promise.all(
+      Object.entries(links).map(([platform, { url, handle }]) =>
+        prisma.socialLink.create({
+          data: {
+            platform: platform as PLATFORM,
+            url,
+            handle,
+            profileId: profile.id,
+          },
+        })
+      )
+    );
+
+    return NextResponse.json(socialLinks);
+  } catch (error) {
+    console.error("Error updating social links:", error);
+    return new NextResponse("Internal Server Error", { status: 500 });
   }
 } 

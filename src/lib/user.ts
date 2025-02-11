@@ -1,5 +1,7 @@
+import { NextResponse } from "next/server";
 import { prisma } from "./db";
-import type { User, UserProfile, Prisma } from "@prisma/client";
+import type { User, UserProfile, Prisma, PLATFORM } from "@prisma/client";
+import { getCurrentSession } from "./session";
 
 interface CreateUserInput {
   email: string;
@@ -228,3 +230,5 @@ export function verifyMultipleWidgetsOwnership(
   const userWidgetIds = new Set(userWidgets);
   return layoutWidgets.every((id) => userWidgetIds.has(id));
 }
+
+

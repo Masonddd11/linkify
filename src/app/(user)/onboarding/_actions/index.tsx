@@ -3,8 +3,8 @@
 import z from "zod";
 import { prisma } from "@/lib/db";
 import { authedProcedure } from "@/lib/auth";
-import { PLATFORM } from "@prisma/client";
 import { uploadProfileImage } from "@/lib/cloudinary";
+import { PLATFORM } from "@prisma/client";
 
 export const hasUserClaimedSlug = authedProcedure
   .createServerAction()
@@ -93,7 +93,10 @@ export const saveSocialLinks = authedProcedure
   .createServerAction()
   .input(
     z.object({
-      links: z.record(z.string()),
+      links: z.record(z.object({
+        url: z.string(),
+        handle: z.string()
+      }))
     })
   )
   .output(
@@ -106,17 +109,6 @@ export const saveSocialLinks = authedProcedure
     try {
       const { links } = input;
 
-      await prisma.socialLink.deleteMany({
-        where: {
-          profileId: (
-            await prisma.userProfile.findUnique({
-              where: { userId: ctx?.user?.id },
-              select: { id: true },
-            })
-          )?.id,
-        },
-      });
-
       // Get user profile
       const userProfile = await prisma.userProfile.findUnique({
         where: { userId: ctx?.user?.id },
@@ -126,16 +118,21 @@ export const saveSocialLinks = authedProcedure
         throw new Error("User profile not found");
       }
 
+      // Delete existing links
+      await prisma.socialLink.deleteMany({
+        where: { profileId: userProfile.id },
+      });
+
       // Create new social links
       const socialLinksPromises = Object.entries(links).map(
-        ([platform, url]) => {
+        ([platform, { url, handle }]) => {
           if (!url) return null;
           return prisma.socialLink.create({
             data: {
               platform: platform as PLATFORM,
               url,
+              handle,
               profileId: userProfile.id,
-              handle: "",
             },
           });
         }

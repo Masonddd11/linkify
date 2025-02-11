@@ -21,6 +21,8 @@ import { useUpdateWidgetSize } from "../_hooks/useUpdateWidgetSize";
 import { toast } from "react-hot-toast";
 import { ImageWidgetDialog } from "@/components/widgets/ImageWidgetDialog";
 import { ProfileAndSocialsAndWidgets, WidgetTypeInclude } from "@/lib/user";
+import { Settings } from "lucide-react";
+
 interface UserProfileComponentProps {
   user : ProfileAndSocialsAndWidgets;
   isMyLink: boolean;
@@ -225,8 +227,22 @@ export const UserProfileComponent: React.FC<UserProfileComponentProps> = ({
           initial={edit ? false : { opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
-          className="space-y-4 flex flex-col justify-center items-center lg:justify-start lg:items-start w-full"
+          className="space-y-4 flex flex-col justify-center items-center lg:justify-start lg:items-start w-full relative"
         >
+          {/* Add Settings Button */}
+          {isMyLink && (
+            <motion.button
+              initial={edit ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8, duration: 0.5 }}
+              onClick={() => router.push('/settings')}
+              className="absolute top-0 right-0 p-2 text-gray-600 hover:text-gray-900 transition-colors"
+              title="Settings"
+            >
+              <Settings className="w-5 h-5" />
+            </motion.button>
+          )}
+
           {/* Profile Image Upload */}
           <motion.div
             initial={edit ? false : { scale: 0.8, opacity: 0 }}

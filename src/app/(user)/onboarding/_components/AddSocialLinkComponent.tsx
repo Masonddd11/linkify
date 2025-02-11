@@ -90,7 +90,6 @@ export function AddSocialLinkComponent({
   const handleContinue = async () => {
     try {
       setIsAdding(true);
-      // Convert usernames to the format expected by the API
       const socialLinks = Object.entries(links)
         .filter(([, handle]) => handle.trim() !== "")
         .map(([platform, handle]) => {
@@ -99,11 +98,7 @@ export function AddSocialLinkComponent({
             throw new Error(`Platform ${platform} configuration not found`);
           }
 
-          // Clean the handle by removing @ and trimming whitespace
-          // Use handle directly as username
           const username = handle.trim();
-
-          // Generate the URL from the username using the platform's URL pattern
           const url = platformConfig.urlPattern.replace("{username}", username);
 
           return {
@@ -113,11 +108,11 @@ export function AddSocialLinkComponent({
           };
         });
 
-      // Convert array to Record<string, string>
-      const socialLinksRecord = socialLinks.reduce((acc, { platform, url }) => {
-        acc[platform] = url;
+      // Convert array to Record<string, { url: string, handle: string }>
+      const socialLinksRecord = socialLinks.reduce((acc, { platform, url, handle }) => {
+        acc[platform] = { url, handle };
         return acc;
-      }, {} as Record<string, string>);
+      }, {} as Record<string, { url: string; handle: string }>);
 
       // Save social links
       const [response, error] = await saveSocialLinks({
@@ -133,8 +128,6 @@ export function AddSocialLinkComponent({
       }
 
       setIsAdding(false);
-
-      // Move to next step
       setOnBoardStep(3);
     } catch (error) {
       console.error("Error saving social links:", error);
