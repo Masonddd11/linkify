@@ -1,7 +1,5 @@
-import { NextResponse } from "next/server";
 import { prisma } from "./db";
-import type { User, UserProfile, Prisma, PLATFORM } from "@prisma/client";
-import { getCurrentSession } from "./session";
+import type { User, UserProfile, Prisma } from "@prisma/client";
 
 interface CreateUserInput {
   email: string;
