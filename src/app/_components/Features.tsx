@@ -65,7 +65,7 @@ export function Features() {
               viewport={{ once: true }}
               className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow"
             >
-              <feature.icon className="w-10 h-10 text-[#7C66DC] mb-4" />
+              <feature.icon className="w-10 h-10 text-primary-500 mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 {feature.title}
               </h3>

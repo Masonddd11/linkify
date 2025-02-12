@@ -60,7 +60,7 @@ export default function LandingPage() {
           >
             <Button
               asChild
-              className="bg-[#7C66DC] hover:bg-[#6952d4] text-white rounded-full px-8 py-6 text-lg font-medium"
+              className="bg-primary-500 hover:bg-primary-300 text-white rounded-full px-8 py-6 text-lg font-medium"
             >
               <Link href="/signup">Create Your Page</Link>
             </Button>
